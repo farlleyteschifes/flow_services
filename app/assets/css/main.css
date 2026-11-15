@@ -177,6 +177,12 @@ h1 {
   background: var(--color-primary-dark);
 }
 
+.button--secondary {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-ink);
+}
+
 .form-hint {
   color: var(--color-muted);
   font-size: 0.875rem;
@@ -224,6 +230,99 @@ h1 {
   margin-top: 1.5rem;
 }
 
+.auth-page {
+  display: grid;
+  min-height: calc(100vh - 150px);
+  place-items: center;
+}
+
+.auth-card,
+.password-card,
+.dashboard-card {
+  width: min(100%, 480px);
+  padding: clamp(1.5rem, 5vw, 2.5rem);
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.auth-card h1,
+.password-card h2,
+.dashboard-card h1 {
+  margin-bottom: 0.75rem;
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  letter-spacing: -0.03em;
+}
+
+.auth-card__description,
+.password-card > p,
+.dashboard-card p {
+  color: var(--color-muted);
+  line-height: 1.6;
+}
+
+.auth-form {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.75rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.field label {
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.field input {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.55rem;
+  background: var(--color-surface);
+  color: var(--color-ink);
+}
+
+.field input:focus {
+  border-color: var(--color-primary);
+  outline: 3px solid rgba(23, 107, 135, 0.16);
+}
+
+.auth-form__submit {
+  width: 100%;
+}
+
+.form-error,
+.form-success {
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.form-error {
+  color: #b42318;
+}
+
+.form-success {
+  color: #067647;
+}
+
+.dashboard-card {
+  display: flex;
+  width: 100%;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.password-card {
+  margin-top: 1rem;
+}
+
 @media (max-width: 720px) {
   .feature-grid {
     grid-template-columns: 1fr;
@@ -231,6 +330,10 @@ h1 {
 
   .hero-card__actions {
     align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .dashboard-card {
     flex-direction: column;
   }
 }

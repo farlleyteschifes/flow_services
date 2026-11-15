@@ -33,6 +33,21 @@ Variáveis previstas:
 - `ADMIN_SECRET`: segredo da rota administrativa.
 - `SESSION_SECRET`: segredo usado pelo mecanismo de sessão.
 
+## Criação administrativa de igreja
+
+A rota `POST /api/admin/churches` exige o segredo configurado em `ADMIN_SECRET` no cabeçalho `x-admin-secret`.
+
+O corpo recebe `name`, `username` (seis dígitos) e, opcionalmente, `password`. Quando a senha não é enviada, a API gera uma senha forte e a retorna uma única vez como `suggestedPassword`.
+
+## Autenticação
+
+- `POST /api/auth/login`: inicia a sessão com `username` e `password`.
+- `GET /api/auth/me`: retorna a igreja autenticada.
+- `POST /api/auth/logout`: encerra a sessão; exige o cabeçalho `x-csrf-token`.
+- `POST /api/auth/password`: altera a senha; exige autenticação e `x-csrf-token`.
+
+As sessões usam cookies seguros e a alteração da senha invalida todas as sessões existentes.
+
 ## Development Server
 
 Start the development server on `http://localhost:3000`:
