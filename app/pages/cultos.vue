@@ -8,7 +8,8 @@ import {
   type ParticipantRole,
   type Service,
   type ServiceType,
-  type Song
+  type Song,
+  buildServiceShareText
 } from '~/composables/useService'
 
 definePageMeta({ middleware: 'auth' })
@@ -184,6 +185,13 @@ const removeCurrentService = async () => {
   } catch (error) { handleError(error) } finally { actionPending.value = false }
 }
 
+const shareServiceOnWhatsApp = () => {
+  if (!service.value) return
+
+  const message = encodeURIComponent(buildServiceShareText(service.value))
+  window.open(`https://wa.me/?text=${message}`, '_blank', 'noopener,noreferrer')
+}
+
 const logoutAndRedirect = async () => {
   await logout()
   await navigateTo('/login')
@@ -214,7 +222,10 @@ onMounted(() => loadService())
     <template v-if="service">
       <div class="service-heading">
         <div><p class="eyebrow">{{ service.date }}</p><h2>{{ serviceTypeLabel }}</h2></div>
-        <button class="danger-button" type="button" :disabled="actionPending" @click="removeCurrentService">Excluir culto</button>
+        <div class="service-heading__actions">
+          <button class="button button--whatsapp" type="button" @click="shareServiceOnWhatsApp">Compartilhar no WhatsApp</button>
+          <button class="danger-button" type="button" :disabled="actionPending" @click="removeCurrentService">Excluir culto</button>
+        </div>
       </div>
 
       <section class="service-section">

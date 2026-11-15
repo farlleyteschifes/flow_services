@@ -34,6 +34,41 @@ export type Service = {
 }
 export type Member = { id: string; name: string; active: boolean }
 
+export function serviceTypeLabel(type: ServiceType) {
+  return serviceTypes.find((item) => item.value === type)?.label ?? type
+}
+
+export function formatServiceDate(date: string) {
+  const [year, month, day] = date.split('-')
+  return `${day}/${month}/${year}`
+}
+
+export function buildServiceShareText(service: Service) {
+  const lines = [
+    '*Flow Services — Registro de culto*',
+    `*Data:* ${formatServiceDate(service.date)}`,
+    `*Tipo:* ${serviceTypeLabel(service.type)}`,
+    '',
+    '*Frequência*',
+    ...frequencyItems.map((item) => `• ${item.label}: ${service.frequency[item.key]}`),
+    '',
+    '*Louvores*',
+    ...(service.songs.length
+      ? service.songs.map((song) => `• ${song.number} — ${song.name}`)
+      : ['• Nenhum louvor registrado']),
+    '',
+    '*Participantes*',
+    ...participantRoles.flatMap((role) => [
+      `${role.label}:`,
+      ...(service.participants[role.key].length
+        ? service.participants[role.key].map((member) => `• ${member.name}`)
+        : ['• Nenhum participante'])
+    ])
+  ]
+
+  return lines.join('\n')
+}
+
 type ApiEnvelope<T> = { data: T }
 
 export function useService() {

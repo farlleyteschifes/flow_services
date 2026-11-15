@@ -199,6 +199,16 @@ h1 {
   color: var(--color-ink);
 }
 
+.button--whatsapp {
+  background: #128c7e;
+  color: white;
+}
+
+.button--whatsapp:hover,
+.button--whatsapp:focus-visible {
+  background: #0b7165;
+}
+
 .form-hint {
   color: var(--color-muted);
   font-size: 0.875rem;
@@ -381,6 +391,13 @@ h1 {
 .service-heading {
   align-items: center;
   margin-top: 2rem;
+}
+
+.service-heading__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
 }
 
 .service-heading h2,
@@ -613,6 +630,11 @@ h1 {
     flex-direction: column;
   }
 
+  .service-heading__actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
   .service-selector,
   .frequency-grid,
   .participant-grid {
@@ -620,7 +642,8 @@ h1 {
   }
 
   .service-selector .button,
-  .danger-button {
+  .danger-button,
+  .service-heading__actions .button {
     width: 100%;
   }
 
