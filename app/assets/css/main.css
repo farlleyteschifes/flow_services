@@ -172,11 +172,15 @@ h1 {
 }
 
 .button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-height: 2.75rem;
   padding: 0.7rem 1.1rem;
   border: 0;
   border-radius: 0.65rem;
   font-weight: 700;
+  text-decoration: none;
 }
 
 .button--primary {

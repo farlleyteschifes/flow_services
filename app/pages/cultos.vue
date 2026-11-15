@@ -184,6 +184,11 @@ const removeCurrentService = async () => {
   } catch (error) { handleError(error) } finally { actionPending.value = false }
 }
 
+const logoutAndRedirect = async () => {
+  await logout()
+  await navigateTo('/login')
+}
+
 onMounted(() => loadService())
 </script>
 
@@ -193,7 +198,7 @@ onMounted(() => loadService())
       <div><p class="eyebrow">{{ church?.name }}</p><h1>Registro de culto</h1></div>
       <div class="toolbar-actions">
         <button class="button button--secondary" type="button" :disabled="loading" @click="refreshService">Atualizar</button>
-        <button class="button button--secondary" type="button" @click="logout">Sair</button>
+        <button class="button button--secondary" type="button" @click="logoutAndRedirect">Sair</button>
       </div>
     </div>
 

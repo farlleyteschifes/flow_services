@@ -7,7 +7,7 @@ export const serviceTypes = [
 
 export const frequencyItems = [
   { key: 'adults', label: 'Membros Adultos' },
-  { key: 'visitors', label: 'Membros Visitantes' },
+  { key: 'visitors', label: 'Adultos Visitantes' },
   { key: 'children', label: 'Membros Crianças' },
   { key: 'visitingChildren', label: 'Crianças Visitantes' }
 ] as const
