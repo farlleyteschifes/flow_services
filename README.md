@@ -66,6 +66,16 @@ As sessões usam cookies seguros e a alteração da senha invalida todas as sess
 
 O Flow Services pode ser instalado como PWA em dispositivos compatíveis. O aplicativo não mantém uma fila offline: consultar e alterar dados exige conexão ativa. Nenhum endpoint da API é armazenado em cache pelo service worker.
 
+## Testes
+
+```bash
+npm run test
+npm run test:ci
+npm run build
+```
+
+Os testes em `tests/unit/` são isolados e não usam o banco de produção. O processo de deploy está documentado em [`doc/deploy.md`](./doc/deploy.md).
+
 ## Development Server
 
 Start the development server on `http://localhost:3000`:
