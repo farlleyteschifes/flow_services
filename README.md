@@ -45,6 +45,12 @@ O corpo recebe `name`, `username` (seis dígitos) e, opcionalmente, `password`. 
 - `GET /api/auth/me`: retorna a igreja autenticada.
 - `POST /api/auth/logout`: encerra a sessão; exige o cabeçalho `x-csrf-token`.
 - `POST /api/auth/password`: altera a senha; exige autenticação e `x-csrf-token`.
+- `GET /api/songs?search=...`: busca louvores do catálogo global.
+- `POST /api/songs`: reutiliza ou cria um louvor pelo número.
+- `PATCH /api/songs/:id`: corrige o nome de um louvor global.
+- `GET /api/members?search=...`: busca membros ativos da igreja autenticada.
+- `POST /api/members`: cadastra ou reativa um membro da igreja autenticada.
+- `DELETE /api/members/:id`: inativa um membro sem removê-lo do histórico.
 
 As sessões usam cookies seguros e a alteração da senha invalida todas as sessões existentes.
 
