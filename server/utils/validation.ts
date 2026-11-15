@@ -35,8 +35,8 @@ export function sixDigitUsername(value: unknown) {
 
 export function strongPassword(value: unknown) {
   if (typeof value !== 'string' || !isStrongPassword(value)) {
-    throw badRequest('A senha deve ter pelo menos 8 caracteres, incluindo letras, números e caracteres especiais.', {
-      password: ['A senha deve ter pelo menos 8 caracteres, incluindo letras, números e caracteres especiais.']
+    throw badRequest('A senha deve ter entre 8 e 128 caracteres, incluindo letras, números e caracteres especiais.', {
+      password: ['A senha deve ter entre 8 e 128 caracteres, incluindo letras, números e caracteres especiais.']
     })
   }
 

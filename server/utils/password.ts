@@ -21,6 +21,7 @@ const ALL_CHARACTERS = LOWERCASE + UPPERCASE + NUMBERS + SPECIALS
 
 export function isStrongPassword(password: string) {
   return password.length >= 8
+    && password.length <= 128
     && /[a-zA-Z]/.test(password)
     && /\d/.test(password)
     && /[^a-zA-Z\d]/.test(password)

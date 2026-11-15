@@ -16,6 +16,8 @@
       <slot />
     </main>
 
+    <NetworkStatus />
+
     <footer class="app-footer">
       <div class="container">Flow Services · Igreja</div>
     </footer>

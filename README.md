@@ -62,6 +62,10 @@ O corpo recebe `name`, `username` (seis dígitos) e, opcionalmente, `password`. 
 
 As sessões usam cookies seguros e a alteração da senha invalida todas as sessões existentes.
 
+## PWA e conectividade
+
+O Flow Services pode ser instalado como PWA em dispositivos compatíveis. O aplicativo não mantém uma fila offline: consultar e alterar dados exige conexão ativa. Nenhum endpoint da API é armazenado em cache pelo service worker.
+
 ## Development Server
 
 Start the development server on `http://localhost:3000`:

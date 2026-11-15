@@ -22,6 +22,12 @@ export function searchPattern(value: string | undefined) {
     return undefined
   }
 
+  if (value.trim().length > 80) {
+    throw badRequest('O termo de busca deve ter no máximo 80 caracteres.', {
+      search: ['O termo de busca deve ter no máximo 80 caracteres.']
+    })
+  }
+
   return new RegExp(escapeRegExp(value.trim()), 'i')
 }
 
