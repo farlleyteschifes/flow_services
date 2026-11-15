@@ -55,6 +55,10 @@ O corpo recebe `name`, `username` (seis dígitos) e, opcionalmente, `password`. 
 - `POST /api/services`: cria ou reutiliza um culto pela data e tipo.
 - `PATCH /api/services/:id/frequency`: incrementa ou decrementa uma categoria de frequência com `category` e `delta` (`1` ou `-1`).
 - `DELETE /api/services/:id`: exclui um culto da igreja autenticada.
+- `POST /api/services/:id/songs`: adiciona um louvor ao culto usando `songId`.
+- `DELETE /api/services/:id/songs/:songId`: remove um louvor do culto.
+- `POST /api/services/:id/participants`: adiciona um membro usando `role` e `memberId`.
+- `DELETE /api/services/:id/participants/:role/:memberId`: remove um participante da função informada.
 
 As sessões usam cookies seguros e a alteração da senha invalida todas as sessões existentes.
 
