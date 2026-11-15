@@ -23,8 +23,10 @@ describe('regras de cultos e frequência', () => {
   it('aceita somente categorias e alterações atômicas permitidas', () => {
     expect(validateFrequencyKey('adults')).toBe('adults')
     expect(validateFrequencyDelta(1)).toBe(1)
-    expect(validateFrequencyDelta(-1)).toBe(-1)
+    expect(validateFrequencyDelta(5)).toBe(5)
+    expect(validateFrequencyDelta(-5)).toBe(-5)
     expect(() => validateFrequencyKey('total')).toThrow(ApiError)
-    expect(() => validateFrequencyDelta(2)).toThrow(ApiError)
+    expect(() => validateFrequencyDelta(0)).toThrow(ApiError)
+    expect(() => validateFrequencyDelta(1001)).toThrow(ApiError)
   })
 })

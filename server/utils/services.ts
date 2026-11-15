@@ -37,13 +37,27 @@ export function validateFrequencyKey(value: unknown): FrequencyKey {
 }
 
 export function validateFrequencyDelta(value: unknown) {
-  if (value !== 1 && value !== -1) {
-    throw badRequest('A alteração da frequência deve ser 1 ou -1.', {
-      delta: ['A alteração da frequência deve ser 1 ou -1.']
+  const delta = typeof value === 'number' ? value : Number(value)
+
+  if (!Number.isInteger(delta) || delta === 0 || Math.abs(delta) > 1000) {
+    throw badRequest('A alteração deve ser um número inteiro entre -1000 e 1000, diferente de zero.', {
+      delta: ['A alteração deve ser um número inteiro entre -1000 e 1000, diferente de zero.']
     })
   }
 
-  return value
+  return delta
+}
+
+export function validateFrequencyValue(value: unknown) {
+  const number = typeof value === 'number' ? value : Number(value)
+
+  if (!Number.isInteger(number) || number < 0) {
+    throw badRequest('A frequência deve ser um número inteiro não negativo.', {
+      value: ['A frequência deve ser um número inteiro não negativo.']
+    })
+  }
+
+  return number
 }
 
 export function emptyFrequency(): Frequency {

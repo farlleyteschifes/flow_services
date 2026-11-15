@@ -53,7 +53,8 @@ O corpo recebe `name`, `username` (seis dígitos) e, opcionalmente, `password`. 
 - `DELETE /api/members/:id`: inativa um membro sem removê-lo do histórico.
 - `GET /api/services?date=AAAA-MM-DD&type=noite`: consulta um culto da igreja autenticada.
 - `POST /api/services`: cria ou reutiliza um culto pela data e tipo.
-- `PATCH /api/services/:id/frequency`: incrementa ou decrementa uma categoria de frequência com `category` e `delta` (`1` ou `-1`).
+- `PATCH /api/services/:id/frequency`: incrementa ou decrementa uma categoria de frequência com `category` e `delta` (inteiro entre `-1000` e `1000`, diferente de zero).
+- `PUT /api/services/:id/frequency`: define diretamente uma categoria com `category` e `value` (inteiro não negativo).
 - `DELETE /api/services/:id`: exclui um culto da igreja autenticada.
 - `POST /api/services/:id/songs`: adiciona um louvor ao culto usando `songId`.
 - `DELETE /api/services/:id/songs/:songId`: remove um louvor do culto.

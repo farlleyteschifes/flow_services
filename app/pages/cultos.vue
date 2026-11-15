@@ -16,7 +16,7 @@ definePageMeta({ middleware: 'auth' })
 
 const { church, logout } = useAuth()
 const {
-  getService, createService, changeFrequency, addSong, removeSong,
+  getService, createService, changeFrequency, setFrequency, addSong, removeSong,
   addParticipant, removeParticipant, deleteService, searchSongs,
   createSong, searchMembers, createMember
 } = useService()
@@ -43,6 +43,8 @@ const memberDrafts = reactive<Record<ParticipantRole, string>>({ worship: '', wo
 const memberOptions = reactive<Record<ParticipantRole, Member[]>>({ worship: [], word: [], gate: [] })
 const selectedMemberIds = reactive<Record<ParticipantRole, string | null>>({ worship: null, word: null, gate: null })
 const memberPending = reactive<Record<ParticipantRole, boolean>>({ worship: false, word: false, gate: false })
+const frequencyDrafts = reactive<Record<FrequencyKey, number>>({ adults: 0, visitors: 0, children: 0, visitingChildren: 0 })
+const frequencySteps = reactive<Record<FrequencyKey, number>>({ adults: 1, visitors: 1, children: 1, visitingChildren: 1 })
 
 const serviceTypeLabel = computed(() => serviceTypes.find((item) => item.value === selectedType.value)?.label)
 const showSaved = (message = 'Alteração salva.') => {
@@ -50,6 +52,9 @@ const showSaved = (message = 'Alteração salva.') => {
   window.setTimeout(() => { savedMessage.value = '' }, 2500)
 }
 const handleError = (error: unknown) => { errorMessage.value = messageFor(error) }
+const syncFrequencyDrafts = (currentService: Service) => {
+  for (const item of frequencyItems) frequencyDrafts[item.key] = currentService.frequency[item.key]
+}
 
 const loadService = async (createIfMissing = true) => {
   if (!selectedDate.value) return
@@ -60,9 +65,11 @@ const loadService = async (createIfMissing = true) => {
     const response = await getService(selectedDate.value, selectedType.value)
     if (response.data.service) {
       service.value = response.data.service
+      syncFrequencyDrafts(response.data.service)
     } else if (createIfMissing) {
       const created = await createService(selectedDate.value, selectedType.value)
       service.value = created.data.service
+      syncFrequencyDrafts(created.data.service)
       showSaved('Culto iniciado.')
     }
   } catch (error) {
@@ -77,15 +84,51 @@ const refreshService = async () => {
   showSaved('Dados atualizados.')
 }
 
-const updateFrequency = async (category: FrequencyKey, delta: 1 | -1) => {
+const updateFrequency = async (category: FrequencyKey, direction: 1 | -1) => {
   if (!service.value || actionPending.value) return
+  const step = Number(frequencySteps[category])
+
+  if (!Number.isInteger(step) || step < 1 || step > 1000) {
+    errorMessage.value = 'A quantidade deve ser um número inteiro entre 1 e 1000.'
+    frequencySteps[category] = 1
+    return
+  }
+
+  const delta = direction * step
   actionPending.value = true
   errorMessage.value = ''
   try {
     const response = await changeFrequency(service.value.id, category, delta)
     service.value = response.data.service
+    syncFrequencyDrafts(response.data.service)
     showSaved()
   } catch (error) { handleError(error) } finally { actionPending.value = false }
+}
+
+const setFrequencyValue = async (category: FrequencyKey) => {
+  if (!service.value || actionPending.value) return
+  const value = Number(frequencyDrafts[category])
+
+  if (!Number.isInteger(value) || value < 0) {
+    frequencyDrafts[category] = service.value.frequency[category]
+    errorMessage.value = 'Informe um número inteiro igual ou maior que zero.'
+    return
+  }
+
+  if (value === service.value.frequency[category]) return
+  actionPending.value = true
+  errorMessage.value = ''
+  try {
+    const response = await setFrequency(service.value.id, category, value)
+    service.value = response.data.service
+    syncFrequencyDrafts(response.data.service)
+    showSaved()
+  } catch (error) {
+    frequencyDrafts[category] = service.value.frequency[category]
+    handleError(error)
+  } finally {
+    actionPending.value = false
+  }
 }
 
 let songSearchSequence = 0
@@ -211,8 +254,8 @@ onMounted(() => loadService())
     </div>
 
     <form class="service-selector" @submit.prevent="loadService()">
-      <div class="field"><label for="service-date">Data do culto</label><input id="service-date" v-model="selectedDate" type="date" required></div>
-      <div class="field"><label for="service-type">Tipo de culto</label><select id="service-type" v-model="selectedType"><option v-for="item in serviceTypes" :key="item.value" :value="item.value">{{ item.label }}</option></select></div>
+      <div class="field field--compact"><label for="service-date">Data do culto</label><input id="service-date" v-model="selectedDate" type="date" aria-label="Data do culto" required></div>
+      <div class="field field--compact"><label for="service-type">Tipo de culto</label><select id="service-type" v-model="selectedType" aria-label="Tipo de culto"><option v-for="item in serviceTypes" :key="item.value" :value="item.value">{{ item.label }}</option></select></div>
       <button class="button button--primary" type="submit" :disabled="loading">{{ loading ? 'Carregando...' : 'Abrir culto' }}</button>
     </form>
 
@@ -228,21 +271,27 @@ onMounted(() => loadService())
         </div>
       </div>
 
-      <section class="service-section">
-        <div class="section-heading"><div><h2>Frequência</h2><p>Atualizada imediatamente a cada toque.</p></div></div>
-        <div class="frequency-grid">
+      <details class="service-section service-accordion" open>
+        <summary class="accordion-summary"><span><strong>Frequência</strong><small>Contagem do culto</small></span><span class="accordion-icon" aria-hidden="true">⌄</span></summary>
+        <div class="accordion-content">
+          <div class="frequency-grid">
           <article v-for="item in frequencyItems" :key="item.key" class="frequency-card">
-            <span>{{ item.label }}</span><strong>{{ service.frequency[item.key] }}</strong>
+            <span>{{ item.label }}</span>
+            <input v-model.number="frequencyDrafts[item.key]" class="frequency-input" type="number" min="0" step="1" :aria-label="`Informar ${item.label}`" @change="setFrequencyValue(item.key)">
             <div class="counter-actions">
+              <input v-model.number="frequencySteps[item.key]" class="frequency-step-input" type="number" min="1" max="1000" step="1" :aria-label="`Quantidade para alterar ${item.label}`">
               <button type="button" :aria-label="`Diminuir ${item.label}`" :disabled="actionPending || service.frequency[item.key] === 0" @click="updateFrequency(item.key, -1)">−</button>
               <button type="button" :aria-label="`Aumentar ${item.label}`" :disabled="actionPending" @click="updateFrequency(item.key, 1)">+</button>
             </div>
           </article>
+          </div>
         </div>
-      </section>
+      </details>
 
-      <section class="service-section">
-        <div class="section-heading"><div><h2>Lista de louvores</h2><p>Busque um louvor existente ou cadastre um novo.</p></div></div>
+      <details class="service-section service-accordion">
+        <summary class="accordion-summary"><span><strong>Lista de Louvores</strong><small>{{ service.songs.length }} registrado(s)</small></span><span class="accordion-icon" aria-hidden="true">⌄</span></summary>
+        <div class="accordion-content">
+        <p class="section-helper">Busque um louvor existente ou cadastre um novo.</p>
         <div class="inline-form autocomplete-field">
           <input v-model="songSearch" type="search" placeholder="Buscar por número ou nome" @input="findSongs">
           <div v-if="songOptions.length" class="suggestions"><button v-for="song in songOptions" :key="song.id" type="button" @click="addSongToService(song)"><strong>{{ song.number }}</strong><span>{{ song.name }}</span></button></div>
@@ -250,10 +299,13 @@ onMounted(() => loadService())
         <div class="new-record-form"><input v-model.number="newSongNumber" type="number" min="0" placeholder="Número"><input v-model="newSongName" type="text" placeholder="Nome do louvor"><button class="button button--primary" type="button" :disabled="songPending" @click="createAndAddSong">Cadastrar e adicionar</button></div>
         <ul v-if="service.songs.length" class="record-list"><li v-for="song in service.songs" :key="song.id"><span><strong>{{ song.number }}</strong> — {{ song.name }}</span><button class="icon-button" type="button" :aria-label="`Remover ${song.name}`" @click="removeSongFromService(song)">×</button></li></ul>
         <p v-else class="empty-state">Nenhum louvor registrado neste culto.</p>
-      </section>
+        </div>
+      </details>
 
-      <section class="service-section">
-        <div class="section-heading"><div><h2>Participantes</h2><p>O mesmo membro pode participar de mais de uma função.</p></div></div>
+      <details class="service-section service-accordion">
+        <summary class="accordion-summary"><span><strong>Responsáveis</strong><small>{{ service.participants.worship.length + service.participants.word.length + service.participants.gate.length }} registrado(s)</small></span><span class="accordion-icon" aria-hidden="true">⌄</span></summary>
+        <div class="accordion-content">
+        <p class="section-helper">O mesmo membro pode participar de mais de uma função.</p>
         <div class="participant-grid">
           <article v-for="role in participantRoles" :key="role.key" class="participant-card">
             <h3>{{ role.label }}</h3>
@@ -263,7 +315,8 @@ onMounted(() => loadService())
             <p v-else class="empty-state">Nenhum participante.</p>
           </article>
         </div>
-      </section>
+        </div>
+      </details>
     </template>
   </section>
 </template>

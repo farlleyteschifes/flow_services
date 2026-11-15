@@ -26,7 +26,7 @@ export default defineEventHandler(async (event) => {
     const filter = {
       _id: id,
       churchId: church._id!,
-      ...(delta === -1 ? { [`frequency.${category}`]: { $gte: 1 } } : {})
+      ...(delta < 0 ? { [`frequency.${category}`]: { $gte: Math.abs(delta) } } : {})
     }
     const result = await collection.updateOne(
       filter,

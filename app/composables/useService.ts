@@ -81,8 +81,11 @@ export function useService() {
   const createService = (date: string, type: ServiceType) => $fetch<ApiEnvelope<{ service: Service }>>(
     '/api/services', { method: 'POST', body: { date, type }, headers: mutationHeaders() }
   )
-  const changeFrequency = (serviceId: string, category: FrequencyKey, delta: 1 | -1) => $fetch<ApiEnvelope<{ service: Service, changed: boolean }>>(
+  const changeFrequency = (serviceId: string, category: FrequencyKey, delta: number) => $fetch<ApiEnvelope<{ service: Service, changed: boolean }>>(
     `/api/services/${serviceId}/frequency`, { method: 'PATCH', body: { category, delta }, headers: mutationHeaders() }
+  )
+  const setFrequency = (serviceId: string, category: FrequencyKey, value: number) => $fetch<ApiEnvelope<{ service: Service, changed: boolean }>>(
+    `/api/services/${serviceId}/frequency`, { method: 'PUT', body: { category, value }, headers: mutationHeaders() }
   )
   const addSong = (serviceId: string, songId: string) => $fetch<ApiEnvelope<{ service: Service, added: boolean }>>(
     `/api/services/${serviceId}/songs`, { method: 'POST', body: { songId }, headers: mutationHeaders() }
@@ -109,7 +112,7 @@ export function useService() {
   })
 
   return {
-    getService, createService, changeFrequency, addSong, removeSong,
+    getService, createService, changeFrequency, setFrequency, addSong, removeSong,
     addParticipant, removeParticipant, deleteService, searchSongs,
     createSong, searchMembers, createMember
   }
