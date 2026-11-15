@@ -51,6 +51,10 @@ O corpo recebe `name`, `username` (seis dígitos) e, opcionalmente, `password`. 
 - `GET /api/members?search=...`: busca membros ativos da igreja autenticada.
 - `POST /api/members`: cadastra ou reativa um membro da igreja autenticada.
 - `DELETE /api/members/:id`: inativa um membro sem removê-lo do histórico.
+- `GET /api/services?date=AAAA-MM-DD&type=noite`: consulta um culto da igreja autenticada.
+- `POST /api/services`: cria ou reutiliza um culto pela data e tipo.
+- `PATCH /api/services/:id/frequency`: incrementa ou decrementa uma categoria de frequência com `category` e `delta` (`1` ou `-1`).
+- `DELETE /api/services/:id`: exclui um culto da igreja autenticada.
 
 As sessões usam cookies seguros e a alteração da senha invalida todas as sessões existentes.
 

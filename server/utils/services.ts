@@ -1,0 +1,98 @@
+import type { ObjectId } from 'mongodb'
+import { badRequest } from './api-error'
+import { isCalendarDate, isServiceType } from './normalization'
+import type { Frequency, ServiceDocument, ServiceType } from '../database/models'
+
+export const FREQUENCY_KEYS = ['adults', 'visitors', 'children', 'visitingChildren'] as const
+export type FrequencyKey = (typeof FREQUENCY_KEYS)[number]
+
+export function validateServiceDate(value: unknown) {
+  if (typeof value !== 'string' || !isCalendarDate(value)) {
+    throw badRequest('A data do culto deve estar no formato AAAA-MM-DD e ser válida.', {
+      date: ['A data do culto deve estar no formato AAAA-MM-DD e ser válida.']
+    })
+  }
+
+  return value
+}
+
+export function validateServiceType(value: unknown): ServiceType {
+  if (typeof value !== 'string' || !isServiceType(value)) {
+    throw badRequest('O tipo de culto informado é inválido.', {
+      type: ['Escolha Madrugada, Culto ao meio-dia, Culto à Noite ou EBD.']
+    })
+  }
+
+  return value as ServiceType
+}
+
+export function validateFrequencyKey(value: unknown): FrequencyKey {
+  if (typeof value !== 'string' || !FREQUENCY_KEYS.includes(value as FrequencyKey)) {
+    throw badRequest('A categoria de frequência informada é inválida.', {
+      category: ['Escolha uma categoria de frequência válida.']
+    })
+  }
+
+  return value as FrequencyKey
+}
+
+export function validateFrequencyDelta(value: unknown) {
+  if (value !== 1 && value !== -1) {
+    throw badRequest('A alteração da frequência deve ser 1 ou -1.', {
+      delta: ['A alteração da frequência deve ser 1 ou -1.']
+    })
+  }
+
+  return value
+}
+
+export function emptyFrequency(): Frequency {
+  return {
+    adults: 0,
+    visitors: 0,
+    children: 0,
+    visitingChildren: 0
+  }
+}
+
+export function emptyParticipants() {
+  return {
+    worship: [],
+    word: [],
+    gate: []
+  }
+}
+
+export function serializeService(service: ServiceDocument) {
+  return {
+    id: service._id?.toHexString(),
+    date: service.dateKey,
+    type: service.type,
+    frequency: service.frequency,
+    songs: service.songs.map((song) => ({
+      id: song.songId?.toHexString(),
+      number: song.number,
+      name: song.name
+    })),
+    participants: {
+      worship: service.participants.worship.map((member) => ({
+        id: member.memberId?.toHexString(),
+        name: member.name
+      })),
+      word: service.participants.word.map((member) => ({
+        id: member.memberId?.toHexString(),
+        name: member.name
+      })),
+      gate: service.participants.gate.map((member) => ({
+        id: member.memberId?.toHexString(),
+        name: member.name
+      }))
+    },
+    createdAt: service.createdAt,
+    updatedAt: service.updatedAt
+  }
+}
+
+export function serviceFilter(churchId: ObjectId, date: string, type: ServiceType) {
+  return { churchId, dateKey: date, type }
+}
