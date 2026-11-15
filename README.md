@@ -1,6 +1,8 @@
-# Nuxt Minimal Starter
+# Flow Services
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+Aplicação web para registro de cultos, frequência, louvores e participantes.
+
+O plano de implementação está em [`doc/tasks/`](./doc/tasks/README.md) e a especificação funcional em [`doc/specification/README.md`](./doc/specification/README.md).
 
 ## Setup
 
@@ -19,6 +21,17 @@ yarn install
 # bun
 bun install
 ```
+
+## Configuração
+
+Copie `.env.example` para `.env` e preencha os segredos necessários. O arquivo `.env` não deve ser versionado.
+
+Variáveis previstas:
+
+- `MONGODB_URI`: conexão com o MongoDB.
+- `MONGODB_DB_NAME`: nome do banco, caso não esteja definido na URI.
+- `ADMIN_SECRET`: segredo da rota administrativa.
+- `SESSION_SECRET`: segredo usado pelo mecanismo de sessão.
 
 ## Development Server
 
