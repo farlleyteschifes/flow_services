@@ -9,7 +9,8 @@ import {
   type Service,
   type ServiceType,
   type Song,
-  buildServiceShareText
+  buildServiceShareText,
+  buildSongListShareText
 } from '~/composables/useService'
 
 definePageMeta({ middleware: 'auth' })
@@ -37,6 +38,7 @@ const songSearch = ref('')
 const songOptions = ref<Song[]>([])
 const newSongNumber = ref<number | undefined>()
 const newSongName = ref('')
+const newSongIsLoose = ref(false)
 const songPending = ref(false)
 
 const memberDrafts = reactive<Record<ParticipantRole, string>>({ worship: '', word: '', gate: '' })
@@ -155,14 +157,15 @@ const addSongToService = async (song: Song) => {
 }
 
 const createAndAddSong = async () => {
-  if (newSongNumber.value === undefined || !newSongName.value.trim() || !service.value || songPending.value) return
+  if ((!newSongIsLoose.value && newSongNumber.value === undefined) || !newSongName.value.trim() || !service.value || songPending.value) return
   songPending.value = true
   try {
-    const created = await createSong(newSongNumber.value, newSongName.value)
+    const created = await createSong(newSongIsLoose.value ? null : newSongNumber.value!, newSongName.value, newSongIsLoose.value)
     const response = await addSong(service.value.id, created.data.song.id)
     service.value = response.data.service
     newSongNumber.value = undefined
     newSongName.value = ''
+    newSongIsLoose.value = false
     showSaved('Louvor cadastrado e adicionado.')
   } catch (error) { handleError(error) } finally { songPending.value = false }
 }
@@ -231,7 +234,14 @@ const removeCurrentService = async () => {
 const shareServiceOnWhatsApp = () => {
   if (!service.value) return
 
-  const message = encodeURIComponent(buildServiceShareText(service.value))
+  const message = encodeURIComponent(buildServiceShareText(service.value, church.value?.name ?? 'Igreja'))
+  window.open(`https://wa.me/?text=${message}`, '_blank', 'noopener,noreferrer')
+}
+
+const shareSongListOnWhatsApp = () => {
+  if (!service.value) return
+
+  const message = encodeURIComponent(buildSongListShareText(service.value, church.value?.name ?? 'Igreja'))
   window.open(`https://wa.me/?text=${message}`, '_blank', 'noopener,noreferrer')
 }
 
@@ -267,6 +277,7 @@ onMounted(() => loadService())
         <div><p class="eyebrow">{{ service.date }}</p><h2>{{ serviceTypeLabel }}</h2></div>
         <div class="service-heading__actions">
           <button class="button button--whatsapp" type="button" @click="shareServiceOnWhatsApp">Compartilhar no WhatsApp</button>
+          <button class="button button--whatsapp button--whatsapp-secondary" type="button" @click="shareSongListOnWhatsApp">Compartilhar louvores</button>
           <button class="danger-button" type="button" :disabled="actionPending" @click="removeCurrentService">Excluir culto</button>
         </div>
       </div>
@@ -294,10 +305,10 @@ onMounted(() => loadService())
         <p class="section-helper">Busque um louvor existente ou cadastre um novo.</p>
         <div class="inline-form autocomplete-field">
           <input v-model="songSearch" type="search" placeholder="Buscar por número ou nome" @input="findSongs">
-          <div v-if="songOptions.length" class="suggestions"><button v-for="song in songOptions" :key="song.id" type="button" @click="addSongToService(song)"><strong>{{ song.number }}</strong><span>{{ song.name }}</span></button></div>
+          <div v-if="songOptions.length" class="suggestions"><button v-for="song in songOptions" :key="song.id" type="button" @click="addSongToService(song)"><strong>{{ song.isLoose ? 'Avulso' : song.number }}</strong><span>{{ song.name }}</span></button></div>
         </div>
-        <div class="new-record-form"><input v-model.number="newSongNumber" type="number" min="0" placeholder="Número"><input v-model="newSongName" type="text" placeholder="Nome do louvor"><button class="button button--primary" type="button" :disabled="songPending" @click="createAndAddSong">Cadastrar e adicionar</button></div>
-        <ul v-if="service.songs.length" class="record-list"><li v-for="song in service.songs" :key="song.id"><span><strong>{{ song.number }}</strong> — {{ song.name }}</span><button class="icon-button" type="button" :aria-label="`Remover ${song.name}`" @click="removeSongFromService(song)">×</button></li></ul>
+        <div class="new-record-form"><input v-model.number="newSongNumber" type="number" min="0" placeholder="Número" :disabled="newSongIsLoose"><input v-model="newSongName" type="text" placeholder="Nome do louvor"><label class="loose-toggle"><input v-model="newSongIsLoose" type="checkbox"> Avulso</label><button class="button button--primary" type="button" :disabled="songPending" @click="createAndAddSong">Cadastrar e adicionar</button></div>
+        <ul v-if="service.songs.length" class="record-list"><li v-for="song in service.songs" :key="song.id"><span><strong>{{ song.isLoose ? 'Avulso' : song.number }}</strong> — {{ song.name }}</span><button class="icon-button" type="button" :aria-label="`Remover ${song.name}`" @click="removeSongFromService(song)">×</button></li></ul>
         <p v-else class="empty-state">Nenhum louvor registrado neste culto.</p>
         </div>
       </details>

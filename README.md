@@ -46,7 +46,7 @@ O corpo recebe `name`, `username` (seis dígitos) e, opcionalmente, `password`. 
 - `POST /api/auth/logout`: encerra a sessão; exige o cabeçalho `x-csrf-token`.
 - `POST /api/auth/password`: altera a senha; exige autenticação e `x-csrf-token`.
 - `GET /api/songs?search=...`: busca louvores do catálogo global.
-- `POST /api/songs`: reutiliza ou cria um louvor pelo número.
+- `POST /api/songs`: reutiliza ou cria um louvor pelo número, ou cria um louvor avulso pelo nome usando `isLoose: true`.
 - `PATCH /api/songs/:id`: corrige o nome de um louvor global.
 - `GET /api/members?search=...`: busca membros ativos da igreja autenticada.
 - `POST /api/members`: cadastra ou reativa um membro da igreja autenticada.

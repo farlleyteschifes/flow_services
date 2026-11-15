@@ -64,7 +64,7 @@ async function ensureIndexes(database: Db) {
       { churchId: 1, normalizedName: 1 },
       { unique: true, name: 'member_church_name_unique' }
     ),
-    database.collection('songs').createIndex({ number: 1 }, { unique: true, name: 'song_number_unique' }),
+    ensureSongIndexes(database),
     database.collection('services').createIndex(
       { churchId: 1, dateKey: 1, type: 1 },
       { unique: true, name: 'service_church_date_type_unique' }
@@ -72,6 +72,35 @@ async function ensureIndexes(database: Db) {
     database.collection('services').createIndex(
       { churchId: 1, dateKey: 1 },
       { name: 'service_church_date_lookup' }
+    )
+  ])
+}
+
+async function ensureSongIndexes(database: Db) {
+  const songs = database.collection('songs')
+
+  try {
+    await songs.dropIndex('song_number_unique')
+  } catch {
+    // O índice antigo pode não existir em uma instalação nova.
+  }
+
+  await Promise.all([
+    songs.createIndex(
+      { number: 1 },
+      {
+        unique: true,
+        name: 'song_number_unique_numeric',
+        partialFilterExpression: { number: { $type: 'number' } }
+      }
+    ),
+    songs.createIndex(
+      { normalizedName: 1 },
+      {
+        unique: true,
+        name: 'song_loose_name_unique',
+        partialFilterExpression: { isLoose: true }
+      }
     )
   ])
 }

@@ -35,6 +35,7 @@ export default defineEventHandler(async (event) => {
           songs: {
             songId: song._id,
             number: song.number,
+            isLoose: song.isLoose,
             name: song.name
           }
         },

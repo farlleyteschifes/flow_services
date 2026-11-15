@@ -22,7 +22,7 @@ export type ServiceType = typeof serviceTypes[number]['value']
 export type FrequencyKey = typeof frequencyItems[number]['key']
 export type ParticipantRole = typeof participantRoles[number]['key']
 
-export type Song = { id: string; number: number; name: string }
+export type Song = { id: string; number: number | null; isLoose: boolean; name: string }
 export type Participant = { id: string; name: string }
 export type Service = {
   id: string
@@ -43,27 +43,42 @@ export function formatServiceDate(date: string) {
   return `${day}/${month}/${year}`
 }
 
-export function buildServiceShareText(service: Service) {
+export function buildServiceShareText(service: Service, churchName: string) {
+  const totalPresent = Object.values(service.frequency).reduce((total, value) => total + value, 0)
   const lines = [
-    '*Flow Services — Registro de culto*',
+    `*${churchName} — Registro de culto*`,
     `*Data:* ${formatServiceDate(service.date)}`,
     `*Tipo:* ${serviceTypeLabel(service.type)}`,
     '',
     '*Frequência*',
     ...frequencyItems.map((item) => `• ${item.label}: ${service.frequency[item.key]}`),
+    `*Total de presentes: ${totalPresent}*`,
     '',
     '*Louvores*',
     ...(service.songs.length
-      ? service.songs.map((song) => `• ${song.number} — ${song.name}`)
+      ? service.songs.map((song) => `• ${song.isLoose ? 'Avulso' : song.number} — ${song.name}`)
       : ['• Nenhum louvor registrado']),
     '',
-    '*Participantes*',
-    ...participantRoles.flatMap((role) => [
-      `${role.label}:`,
-      ...(service.participants[role.key].length
-        ? service.participants[role.key].map((member) => `• ${member.name}`)
-        : ['• Nenhum participante'])
-    ])
+    '*Responsáveis*',
+    ...participantRoles.map((role) => {
+      const names = service.participants[role.key].map((member) => member.name)
+      return `${role.label}: ${names.length ? names.join(', ') : 'Nenhum responsável'}`
+    })
+  ]
+
+  return lines.join('\n')
+}
+
+export function buildSongListShareText(service: Service, churchName: string) {
+  const lines = [
+    `*${churchName} — Registro de culto*`,
+    `*Data:* ${formatServiceDate(service.date)}`,
+    `*Tipo:* ${serviceTypeLabel(service.type)}`,
+    '',
+    'Lista de Louvores',
+    ...(service.songs.length
+      ? service.songs.map((song) => `${song.isLoose ? 'Avulso' : song.number}:${song.name}`)
+      : ['Nenhum louvor registrado'])
   ]
 
   return lines.join('\n')
@@ -103,8 +118,8 @@ export function useService() {
     `/api/services/${serviceId}`, { method: 'DELETE', headers: mutationHeaders() }
   )
   const searchSongs = (search: string) => $fetch<ApiEnvelope<{ songs: Song[] }>>('/api/songs', { query: { search, limit: 10 } })
-  const createSong = (number: number, name: string) => $fetch<ApiEnvelope<{ song: Song }>>('/api/songs', {
-    method: 'POST', body: { number, name }, headers: mutationHeaders()
+  const createSong = (number: number | null, name: string, isLoose = false) => $fetch<ApiEnvelope<{ song: Song }>>('/api/songs', {
+    method: 'POST', body: { number, name, isLoose }, headers: mutationHeaders()
   })
   const searchMembers = (search: string) => $fetch<ApiEnvelope<{ members: Member[] }>>('/api/members', { query: { search, limit: 10 } })
   const createMember = (name: string) => $fetch<ApiEnvelope<{ member: Member }>>('/api/members', {

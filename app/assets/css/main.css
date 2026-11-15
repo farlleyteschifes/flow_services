@@ -204,6 +204,10 @@ h1 {
   color: white;
 }
 
+.button--whatsapp-secondary {
+  background: #075e54;
+}
+
 .button--whatsapp:hover,
 .button--whatsapp:focus-visible {
   background: #0b7165;
@@ -646,6 +650,21 @@ h1 {
   flex: 1;
 }
 
+.loose-toggle {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0 0.5rem;
+  color: var(--color-muted);
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+
+.loose-toggle input {
+  min-height: auto;
+}
+
 .record-list {
   display: grid;
   gap: 0.5rem;
@@ -829,5 +848,9 @@ h1 {
   .new-record-form input:first-child,
   .new-record-form input:nth-child(2) {
     width: 100%;
+  }
+
+  .loose-toggle {
+    justify-content: flex-start;
   }
 }

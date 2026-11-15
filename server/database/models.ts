@@ -34,7 +34,9 @@ export type MemberDocument = {
 
 export type SongDocument = {
   _id?: ObjectId
-  number: number
+  number: number | null
+  isLoose: boolean
+  normalizedName: string
   name: string
   createdAt: Date
   updatedAt: Date
@@ -42,7 +44,8 @@ export type SongDocument = {
 
 export type SongSnapshot = {
   songId?: ObjectId
-  number: number
+  number: number | null
+  isLoose: boolean
   name: string
 }
 

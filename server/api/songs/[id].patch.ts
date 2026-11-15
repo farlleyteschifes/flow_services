@@ -4,6 +4,7 @@ import { notFound } from '../../utils/api-error'
 import { apiError, apiSuccess } from '../../utils/api-response'
 import { getAuthenticatedChurch } from '../../utils/auth'
 import { objectIdFromParam } from '../../utils/mongo-validation'
+import { normalizeText } from '../../utils/normalization'
 import { requiredText } from '../../utils/validation'
 
 type SongUpdateBody = {
@@ -20,7 +21,7 @@ export default defineEventHandler(async (event) => {
     const collection = await songsCollection()
     const result = await collection.findOneAndUpdate(
       { _id: id },
-      { $set: { name, updatedAt: now } },
+      { $set: { name, normalizedName: normalizeText(name), updatedAt: now } },
       { returnDocument: 'after' }
     )
 
@@ -34,10 +35,11 @@ export default defineEventHandler(async (event) => {
   }
 })
 
-function serializeSong(song: { _id?: { toHexString(): string }, number: number, name: string, createdAt: Date, updatedAt: Date }) {
+function serializeSong(song: { _id?: { toHexString(): string }, number: number | null, isLoose: boolean, name: string, createdAt: Date, updatedAt: Date }) {
   return {
     id: song._id?.toHexString(),
     number: song.number,
+    isLoose: song.isLoose,
     name: song.name,
     createdAt: song.createdAt,
     updatedAt: song.updatedAt

@@ -24,6 +24,7 @@ export default defineEventHandler(async (event) => {
       songs: songs.map((song) => ({
         id: song._id?.toHexString(),
         number: song.number,
+        isLoose: song.isLoose,
         name: song.name,
         createdAt: song.createdAt,
         updatedAt: song.updatedAt
