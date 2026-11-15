@@ -419,6 +419,13 @@ h1 {
   align-items: center;
 }
 
+.section-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
 .service-heading h2,
 .section-heading h2 {
   margin-bottom: 0.4rem;
@@ -836,6 +843,10 @@ h1 {
   .service-selector .button,
   .danger-button,
   .service-heading__actions .button {
+    width: 100%;
+  }
+
+  .section-actions .button {
     width: 100%;
   }
 

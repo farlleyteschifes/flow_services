@@ -277,7 +277,6 @@ onMounted(() => loadService())
         <div><p class="eyebrow">{{ service.date }}</p><h2>{{ serviceTypeLabel }}</h2></div>
         <div class="service-heading__actions">
           <button class="button button--whatsapp" type="button" @click="shareServiceOnWhatsApp">Compartilhar no WhatsApp</button>
-          <button class="button button--whatsapp button--whatsapp-secondary" type="button" @click="shareSongListOnWhatsApp">Compartilhar louvores</button>
           <button class="danger-button" type="button" :disabled="actionPending" @click="removeCurrentService">Excluir culto</button>
         </div>
       </div>
@@ -310,6 +309,9 @@ onMounted(() => loadService())
         <div class="new-record-form"><input v-model.number="newSongNumber" type="number" min="0" placeholder="Número" :disabled="newSongIsLoose"><input v-model="newSongName" type="text" placeholder="Nome do louvor"><label class="loose-toggle"><input v-model="newSongIsLoose" type="checkbox"> Avulso</label><button class="button button--primary" type="button" :disabled="songPending" @click="createAndAddSong">Cadastrar e adicionar</button></div>
         <ul v-if="service.songs.length" class="record-list"><li v-for="song in service.songs" :key="song.id"><span><strong>{{ song.isLoose ? 'Avulso' : song.number }}</strong> — {{ song.name }}</span><button class="icon-button" type="button" :aria-label="`Remover ${song.name}`" @click="removeSongFromService(song)">×</button></li></ul>
         <p v-else class="empty-state">Nenhum louvor registrado neste culto.</p>
+        <div class="section-actions">
+          <button class="button button--whatsapp button--whatsapp-secondary" type="button" @click="shareSongListOnWhatsApp">Compartilhar louvores</button>
+        </div>
         </div>
       </details>
 
