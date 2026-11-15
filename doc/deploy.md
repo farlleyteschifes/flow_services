@@ -41,3 +41,47 @@ Após o deploy, valide:
 4. `/api/health` responde com status `ok`.
 5. O navegador identifica a aplicação como instalável.
 6. A alteração de senha encerra as sessões existentes.
+
+## Criação administrativa pelo Zsh
+
+O segredo `ADMIN_SECRET` pode conter caracteres como `!`, `<` e `>`. No Zsh, o caractere `!` pode ser interpretado como expansão do histórico e gerar o erro `event not found`.
+
+Leia o segredo de forma silenciosa em uma variável e use-o entre aspas duplas:
+
+```bash
+printf "Admin secret: "
+read -r -s ADMIN_SECRET
+printf "\n"
+
+vercel curl /api/admin/churches \
+  --deployment https://flowservices-ejeeef8f8-ftesch-8273s-projects.vercel.app \
+  -X POST \
+  -H "Content-Type: application/json" \
+  -H "x-admin-secret: $ADMIN_SECRET" \
+  -d '{"name":"Valparaiso II","username":"061453","password":"061453#VALP2"}'
+
+unset ADMIN_SECRET
+```
+
+O comando `vercel curl` permite acessar deployments protegidos pela Vercel Authentication. A rota da aplicação continua exigindo o cabeçalho `x-admin-secret`.
+
+Se o segredo for exposto em um terminal, histórico ou mensagem, gere um novo valor, atualize `ADMIN_SECRET` na Vercel e faça um novo deploy.
+
+```bash
+
+printf "Admin secret: "
+read -r -s ADMIN_SECRET
+printf "\n"
+
+curl -X POST https://flowservices-ejeeef8f8-ftesch-8273s-projects.vercel.app/api/admin/churches \
+-H "Content-Type: application/json" \
+-H "x-admin-secret: $ADMIN_SECRET" \
+-d '{
+"name": "Valparaiso 2",
+"username": "061453",
+"password": "061453#VALP2"
+}'
+
+unset ADMIN_SECRET
+
+```
