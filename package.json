@@ -10,6 +10,7 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
+    "seed:coletaneas": "node --env-file=.env scripts/seed-coletaneas.mjs",
     "postinstall": "nuxt prepare"
   },
   "dependencies": {

@@ -87,7 +87,8 @@ export function serializeService(service: ServiceDocument) {
       id: song.songId?.toHexString(),
       number: song.number,
       isLoose: song.isLoose,
-      name: song.name
+      name: song.name,
+      ...(song.collectionName ? { collectionName: song.collectionName } : {})
     })),
     participants: {
       worship: service.participants.worship.map((member) => ({

@@ -18,7 +18,7 @@ definePageMeta({ middleware: 'auth' })
 const { church, logout } = useAuth()
 const {
   getService, createService, changeFrequency, setFrequency, addSong, removeSong,
-  addParticipant, removeParticipant, deleteService, searchSongs,
+  addParticipant, removeParticipant, deleteService, searchSongs, searchCollectionSongs,
   createSong, searchMembers, createMember
 } = useService()
 const { messageFor } = useApiError()
@@ -36,9 +36,6 @@ const savedMessage = ref('')
 
 const songSearch = ref('')
 const songOptions = ref<Song[]>([])
-const newSongNumber = ref<number | undefined>()
-const newSongName = ref('')
-const newSongIsLoose = ref(false)
 const songPending = ref(false)
 
 const memberDrafts = reactive<Record<ParticipantRole, string>>({ worship: '', word: '', gate: '' })
@@ -139,8 +136,20 @@ const findSongs = async () => {
   if (!search) { songOptions.value = []; return }
   const sequence = ++songSearchSequence
   try {
-    const response = await searchSongs(search)
-    if (sequence === songSearchSequence) songOptions.value = response.data.songs
+    const [catalogResponse, collectionResponse] = await Promise.all([
+      searchSongs(search),
+      searchCollectionSongs(search)
+    ])
+    if (sequence === songSearchSequence) {
+      const results = [...collectionResponse.data.songs, ...catalogResponse.data.songs]
+      const seen = new Set<string>()
+      songOptions.value = results.filter((song) => {
+        const key = `${song.number ?? 'avulso'}:${song.name.toLocaleLowerCase('pt-BR')}`
+        if (seen.has(key)) return false
+        seen.add(key)
+        return true
+      })
+    }
   } catch (error) { handleError(error) }
 }
 
@@ -148,25 +157,14 @@ const addSongToService = async (song: Song) => {
   if (!service.value || songPending.value) return
   songPending.value = true
   try {
-    const response = await addSong(service.value.id, song.id)
+    const songId = song.source === 'coletanea'
+      ? (await createSong(song.number, song.name, false, song.collectionName)).data.song.id
+      : song.id
+    const response = await addSong(service.value.id, songId, song.source === 'coletanea' ? song.collectionName : undefined)
     service.value = response.data.service
     songSearch.value = ''
     songOptions.value = []
     showSaved(response.data.added ? 'Louvor adicionado.' : 'Louvor já estava no culto.')
-  } catch (error) { handleError(error) } finally { songPending.value = false }
-}
-
-const createAndAddSong = async () => {
-  if ((!newSongIsLoose.value && newSongNumber.value === undefined) || !newSongName.value.trim() || !service.value || songPending.value) return
-  songPending.value = true
-  try {
-    const created = await createSong(newSongIsLoose.value ? null : newSongNumber.value!, newSongName.value, newSongIsLoose.value)
-    const response = await addSong(service.value.id, created.data.song.id)
-    service.value = response.data.service
-    newSongNumber.value = undefined
-    newSongName.value = ''
-    newSongIsLoose.value = false
-    showSaved('Louvor cadastrado e adicionado.')
   } catch (error) { handleError(error) } finally { songPending.value = false }
 }
 
@@ -301,13 +299,12 @@ onMounted(() => loadService())
       <details class="service-section service-accordion">
         <summary class="accordion-summary"><span><strong>Lista de Louvores</strong><small>{{ service.songs.length }} registrado(s)</small></span><span class="accordion-icon" aria-hidden="true">⌄</span></summary>
         <div class="accordion-content">
-        <p class="section-helper">Busque um louvor existente ou cadastre um novo.</p>
+        <p class="section-helper">Busque por número ou por palavras do nome do louvor. Os resultados das coletâneas são ranqueados por relevância.</p>
         <div class="inline-form autocomplete-field">
-          <input v-model="songSearch" type="search" placeholder="Buscar por número ou nome" @input="findSongs">
-          <div v-if="songOptions.length" class="suggestions"><button v-for="song in songOptions" :key="song.id" type="button" @click="addSongToService(song)"><strong>{{ song.isLoose ? 'Avulso' : song.number }}</strong><span>{{ song.name }}</span></button></div>
+          <input v-model="songSearch" type="search" placeholder="Número ou nome do louvor" @input="findSongs">
+          <div v-if="songOptions.length" class="suggestions"><button v-for="song in songOptions" :key="`${song.source ?? 'catalog'}-${song.id}`" type="button" @click="addSongToService(song)"><strong>{{ song.isLoose ? 'Avulso' : song.number }}</strong><span>{{ song.name }}<small v-if="song.collectionName">{{ song.collectionName }}</small></span></button></div>
         </div>
-        <div class="new-record-form"><input v-model.number="newSongNumber" type="number" min="0" placeholder="Número" :disabled="newSongIsLoose"><input v-model="newSongName" type="text" placeholder="Nome do louvor"><label class="loose-toggle"><input v-model="newSongIsLoose" type="checkbox"> Avulso</label><button class="button button--primary" type="button" :disabled="songPending" @click="createAndAddSong">Cadastrar e adicionar</button></div>
-        <ul v-if="service.songs.length" class="record-list"><li v-for="song in service.songs" :key="song.id"><span><strong>{{ song.isLoose ? 'Avulso' : song.number }}</strong> — {{ song.name }}</span><button class="icon-button" type="button" :aria-label="`Remover ${song.name}`" @click="removeSongFromService(song)">×</button></li></ul>
+        <ul v-if="service.songs.length" class="record-list"><li v-for="song in service.songs" :key="song.id"><span class="song-record-label"><span><strong>{{ song.isLoose ? 'Avulso' : song.number }}</strong> — {{ song.name }}</span><small v-if="song.collectionName">{{ song.collectionName }}</small></span><button class="icon-button" type="button" :aria-label="`Remover ${song.name}`" @click="removeSongFromService(song)">×</button></li></ul>
         <p v-else class="empty-state">Nenhum louvor registrado neste culto.</p>
         <div class="section-actions">
           <button class="button button--whatsapp button--whatsapp-secondary" type="button" @click="shareSongListOnWhatsApp">Compartilhar louvores</button>

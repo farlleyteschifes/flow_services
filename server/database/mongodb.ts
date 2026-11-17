@@ -72,6 +72,10 @@ async function ensureIndexes(database: Db) {
     database.collection('services').createIndex(
       { churchId: 1, dateKey: 1 },
       { name: 'service_church_date_lookup' }
+    ),
+    database.collection('coletaneas').createIndex(
+      { collectionName: 1, songNumber: 1, songName: 1 },
+      { name: 'coletanea_song_lookup' }
     )
   ])
 }

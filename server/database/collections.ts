@@ -2,6 +2,7 @@ import type { Collection } from 'mongodb'
 import type {
   ChurchDocument,
   MemberDocument,
+  SongCollectionDocument,
   ServiceDocument,
   SongDocument
 } from './models'
@@ -17,6 +18,10 @@ export async function membersCollection(): Promise<Collection<MemberDocument>> {
 
 export async function songsCollection(): Promise<Collection<SongDocument>> {
   return (await getDatabase()).collection<SongDocument>('songs')
+}
+
+export async function songCollectionsCollection(): Promise<Collection<SongCollectionDocument>> {
+  return (await getDatabase()).collection<SongCollectionDocument>('coletaneas')
 }
 
 export async function servicesCollection(): Promise<Collection<ServiceDocument>> {

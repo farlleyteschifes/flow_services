@@ -640,6 +640,19 @@ h1 {
   text-align: left;
 }
 
+.suggestions button > span,
+.song-record-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.suggestions small,
+.song-record-label small {
+  color: var(--color-muted);
+  font-size: 0.75rem;
+}
+
 .suggestions button:last-child {
   border-bottom: 0;
 }

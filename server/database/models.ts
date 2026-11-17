@@ -42,11 +42,19 @@ export type SongDocument = {
   updatedAt: Date
 }
 
+export type SongCollectionDocument = {
+  _id?: ObjectId
+  collectionName: string
+  songNumber: number
+  songName: string
+}
+
 export type SongSnapshot = {
   songId?: ObjectId
   number: number | null
   isLoose: boolean
   name: string
+  collectionName?: string
 }
 
 export type MemberSnapshot = {
