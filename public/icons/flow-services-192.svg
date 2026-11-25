@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" role="img" aria-label="Flow Services">
-  <rect width="192" height="192" rx="42" fill="#176b87"/>
-  <path fill="#fff" d="M53 42h86v22H78v25h52v21H78v40H53z"/>
-  <circle cx="142" cy="137" r="12" fill="#a7e3ef"/>
+  <rect width="192" height="192" rx="42" fill="#087f5b"/>
+  <circle cx="96" cy="96" r="57" fill="none" stroke="#f5f3e8" stroke-width="12"/>
+  <path fill="none" stroke="#20a66a" stroke-linecap="round" stroke-linejoin="round" stroke-width="15" d="m66 98 20 20 41-45"/>
 </svg>
