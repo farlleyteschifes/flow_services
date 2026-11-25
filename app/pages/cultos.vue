@@ -419,7 +419,10 @@ onBeforeUnmount(closeFrequencyMonitor)
           <div class="frequency-monitor__header">
             <div>
               <p class="eyebrow">{{ church?.name }}</p>
-              <h2 id="frequency-monitor-title">Frequência do culto</h2>
+              <div class="frequency-monitor__title-row">
+                <h2 id="frequency-monitor-title">Frequência do culto</h2>
+                <span class="frequency-monitor__live" aria-label="Monitoramento ativo"><span aria-hidden="true"></span>Monitorando</span>
+              </div>
               <p class="frequency-monitor__context">
                 {{ formatServiceDate(service?.date ?? selectedDate) }} · {{ serviceTypeLabel(service?.type ?? selectedType) }}
               </p>
@@ -435,11 +438,11 @@ onBeforeUnmount(closeFrequencyMonitor)
           </div>
 
           <div class="frequency-monitor__totals">
-            <article>
+            <article class="frequency-monitor__total-visitors">
               <span>Total de Visitantes</span>
               <strong>{{ frequencyMonitorTotals.visitors }}</strong>
             </article>
-            <article>
+            <article class="frequency-monitor__total-members">
               <span>Total de Membros</span>
               <strong>{{ frequencyMonitorTotals.members }}</strong>
             </article>
