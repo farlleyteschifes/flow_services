@@ -49,12 +49,22 @@ export type SongCollectionDocument = {
   songName: string
 }
 
+export const WORSHIP_GROUPS = ['louvor', 'senhoras', 'jovens'] as const
+export type WorshipGroup = (typeof WORSHIP_GROUPS)[number]
+
 export type SongSnapshot = {
   songId?: ObjectId
+  entryId?: ObjectId
+  kind?: 'song'
   number: number | null
   isLoose: boolean
   name: string
   collectionName?: string
+  group?: WorshipGroup
+} | {
+  entryId: ObjectId
+  kind: 'group'
+  group: WorshipGroup
 }
 
 export type MemberSnapshot = {

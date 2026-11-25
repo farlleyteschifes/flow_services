@@ -18,17 +18,30 @@ export const participantRoles = [
   { key: 'gate', label: 'Portão' }
 ] as const
 
+export const worshipGroups = [
+  { value: 'louvor', label: 'Grupo de Louvor' },
+  { value: 'senhoras', label: 'Senhoras' },
+  { value: 'jovens', label: 'Jovens' }
+] as const
+
 export type ServiceType = typeof serviceTypes[number]['value']
 export type FrequencyKey = typeof frequencyItems[number]['key']
 export type ParticipantRole = typeof participantRoles[number]['key']
+export type WorshipGroup = typeof worshipGroups[number]['value']
 
 export type Song = {
   id: string
+  kind?: 'song'
   number: number | null
   isLoose: boolean
   name: string
   collectionName?: string
   source?: 'catalog' | 'coletanea'
+  group?: WorshipGroup
+} | {
+  id: string
+  kind: 'group'
+  group: WorshipGroup
 }
 export type Participant = { id: string; name: string }
 export type Service = {
@@ -63,7 +76,9 @@ export function buildServiceShareText(service: Service, churchName: string) {
     '',
     '*Louvores*',
     ...(service.songs.length
-      ? service.songs.map((song) => `• ${song.isLoose ? 'Avulso' : song.number} — ${song.name}${song.collectionName ? ` (${song.collectionName})` : ''}`)
+      ? service.songs.map((song) => song.kind === 'group'
+        ? `• ${worshipGroups.find((group) => group.value === song.group)?.label ?? song.group}`
+        : `• ${song.isLoose ? 'Avulso' : song.number} — ${song.name}${song.collectionName ? ` (${song.collectionName})` : ''}`)
       : ['• Nenhum louvor registrado']),
     '',
     '*Responsáveis*',
@@ -84,7 +99,9 @@ export function buildSongListShareText(service: Service, churchName: string) {
     '',
     'Lista de Louvores',
     ...(service.songs.length
-      ? service.songs.map((song) => `${song.isLoose ? 'Avulso' : song.number}:${song.name}${song.collectionName ? ` (${song.collectionName})` : ''}`)
+      ? service.songs.map((song) => song.kind === 'group'
+        ? `*${worshipGroups.find((group) => group.value === song.group)?.label ?? song.group}*`
+        : `${song.isLoose ? 'Avulso' : song.number}:${song.name}${song.collectionName ? ` (${song.collectionName})` : ''}`)
       : ['Nenhum louvor registrado'])
   ]
 
@@ -109,8 +126,11 @@ export function useService() {
   const setFrequency = (serviceId: string, category: FrequencyKey, value: number) => $fetch<ApiEnvelope<{ service: Service, changed: boolean }>>(
     `/api/services/${serviceId}/frequency`, { method: 'PUT', body: { category, value }, headers: mutationHeaders() }
   )
-  const addSong = (serviceId: string, songId: string, collectionName?: string) => $fetch<ApiEnvelope<{ service: Service, added: boolean }>>(
-    `/api/services/${serviceId}/songs`, { method: 'POST', body: { songId, collectionName }, headers: mutationHeaders() }
+  const addSong = (serviceId: string, songId: string, collectionName?: string, group?: WorshipGroup) => $fetch<ApiEnvelope<{ service: Service, added: boolean }>>(
+    `/api/services/${serviceId}/songs`, { method: 'POST', body: { songId, collectionName, group }, headers: mutationHeaders() }
+  )
+  const addGroup = (serviceId: string, group: WorshipGroup) => $fetch<ApiEnvelope<{ service: Service, added: boolean }>>(
+    `/api/services/${serviceId}/songs`, { method: 'POST', body: { group }, headers: mutationHeaders() }
   )
   const removeSong = (serviceId: string, songId: string) => $fetch<ApiEnvelope<{ service: Service, removed: boolean }>>(
     `/api/services/${serviceId}/songs/${songId}`, { method: 'DELETE', headers: mutationHeaders() }
@@ -136,7 +156,7 @@ export function useService() {
 
   return {
     getService, createService, changeFrequency, setFrequency, addSong, removeSong,
-    addParticipant, removeParticipant, deleteService, searchSongs, searchCollectionSongs,
+    addParticipant, removeParticipant, deleteService, searchSongs, searchCollectionSongs, addGroup,
     createSong, searchMembers, createMember
   }
 }

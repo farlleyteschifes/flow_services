@@ -12,8 +12,8 @@ export default defineEventHandler(async (event) => {
     const songId = objectId(event.context.params?.songId, 'louvor')
     const services = await servicesCollection()
     const result = await services.updateOne(
-      { _id: serviceId, churchId: church._id!, 'songs.songId': songId },
-      { $pull: { songs: { songId } }, $set: { updatedAt: new Date() } }
+      { _id: serviceId, churchId: church._id!, songs: { $elemMatch: { $or: [{ songId }, { entryId: songId }] } } },
+      { $pull: { songs: { $or: [{ songId }, { entryId: songId }] } }, $set: { updatedAt: new Date() } }
     )
     const service = await services.findOne({ _id: serviceId, churchId: church._id! })
 

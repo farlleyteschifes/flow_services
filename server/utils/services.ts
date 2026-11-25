@@ -1,7 +1,7 @@
 import type { ObjectId } from 'mongodb'
 import { badRequest } from './api-error'
 import { isCalendarDate, isServiceType } from './normalization'
-import type { Frequency, ServiceDocument, ServiceType } from '../database/models'
+import { WORSHIP_GROUPS, type Frequency, type ServiceDocument, type ServiceType, type WorshipGroup } from '../database/models'
 
 export const FREQUENCY_KEYS = ['adults', 'visitors', 'children', 'visitingChildren'] as const
 export type FrequencyKey = (typeof FREQUENCY_KEYS)[number]
@@ -60,6 +60,16 @@ export function validateFrequencyValue(value: unknown) {
   return number
 }
 
+export function validateWorshipGroup(value: unknown): WorshipGroup {
+  if (typeof value !== 'string' || !WORSHIP_GROUPS.includes(value as WorshipGroup)) {
+    throw badRequest('O grupo do louvor é inválido.', {
+      group: ['Escolha Grupo de Louvor, Senhoras ou Jovens.']
+    })
+  }
+
+  return value as WorshipGroup
+}
+
 export function emptyFrequency(): Frequency {
   return {
     adults: 0,
@@ -83,13 +93,20 @@ export function serializeService(service: ServiceDocument) {
     date: service.dateKey,
     type: service.type,
     frequency: service.frequency,
-    songs: service.songs.map((song) => ({
-      id: song.songId?.toHexString(),
-      number: song.number,
-      isLoose: song.isLoose,
-      name: song.name,
-      ...(song.collectionName ? { collectionName: song.collectionName } : {})
-    })),
+    songs: service.songs.map((song) => song.kind === 'group'
+      ? {
+          id: song.entryId.toHexString(),
+          kind: 'group' as const,
+          group: song.group
+        }
+      : {
+          id: (song.songId ?? song.entryId)?.toHexString(),
+          number: song.number,
+          isLoose: song.isLoose,
+          name: song.name,
+          ...(song.collectionName ? { collectionName: song.collectionName } : {}),
+          ...(song.group ? { group: song.group } : {})
+        }),
     participants: {
       worship: service.participants.worship.map((member) => ({
         id: member.memberId?.toHexString(),

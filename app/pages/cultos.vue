@@ -3,14 +3,18 @@ import {
   frequencyItems,
   participantRoles,
   serviceTypes,
+  worshipGroups,
   type FrequencyKey,
   type Member,
   type ParticipantRole,
   type Service,
   type ServiceType,
   type Song,
+  type WorshipGroup,
   buildServiceShareText,
-  buildSongListShareText
+  buildSongListShareText,
+  formatServiceDate,
+  serviceTypeLabel
 } from '~/composables/useService'
 
 definePageMeta({ middleware: 'auth' })
@@ -18,7 +22,7 @@ definePageMeta({ middleware: 'auth' })
 const { church, logout } = useAuth()
 const {
   getService, createService, changeFrequency, setFrequency, addSong, removeSong,
-  addParticipant, removeParticipant, deleteService, searchSongs, searchCollectionSongs,
+  addParticipant, removeParticipant, deleteService, searchSongs, searchCollectionSongs, addGroup,
   createSong, searchMembers, createMember
 } = useService()
 const { messageFor } = useApiError()
@@ -37,6 +41,7 @@ const savedMessage = ref('')
 const songSearch = ref('')
 const songOptions = ref<Song[]>([])
 const songPending = ref(false)
+const selectedSongGroup = ref<WorshipGroup>('louvor')
 
 const memberDrafts = reactive<Record<ParticipantRole, string>>({ worship: '', word: '', gate: '' })
 const memberOptions = reactive<Record<ParticipantRole, Member[]>>({ worship: [], word: [], gate: [] })
@@ -45,7 +50,6 @@ const memberPending = reactive<Record<ParticipantRole, boolean>>({ worship: fals
 const frequencyDrafts = reactive<Record<FrequencyKey, number>>({ adults: 0, visitors: 0, children: 0, visitingChildren: 0 })
 const frequencySteps = reactive<Record<FrequencyKey, number>>({ adults: 1, visitors: 1, children: 1, visitingChildren: 1 })
 
-const serviceTypeLabel = computed(() => serviceTypes.find((item) => item.value === selectedType.value)?.label)
 const showSaved = (message = 'Alteração salva.') => {
   savedMessage.value = message
   window.setTimeout(() => { savedMessage.value = '' }, 2500)
@@ -154,17 +158,27 @@ const findSongs = async () => {
 }
 
 const addSongToService = async (song: Song) => {
-  if (!service.value || songPending.value) return
+  if (!service.value || songPending.value || song.kind === 'group') return
   songPending.value = true
   try {
     const songId = song.source === 'coletanea'
       ? (await createSong(song.number, song.name, false, song.collectionName)).data.song.id
       : song.id
-    const response = await addSong(service.value.id, songId, song.source === 'coletanea' ? song.collectionName : undefined)
+    const response = await addSong(service.value.id, songId, song.source === 'coletanea' ? song.collectionName : undefined, selectedSongGroup.value)
     service.value = response.data.service
     songSearch.value = ''
     songOptions.value = []
     showSaved(response.data.added ? 'Louvor adicionado.' : 'Louvor já estava no culto.')
+  } catch (error) { handleError(error) } finally { songPending.value = false }
+}
+
+const addGroupToService = async () => {
+  if (!service.value || songPending.value) return
+  songPending.value = true
+  try {
+    const response = await addGroup(service.value.id, selectedSongGroup.value)
+    service.value = response.data.service
+    showSaved('Grupo adicionado à lista.')
   } catch (error) { handleError(error) } finally { songPending.value = false }
 }
 
@@ -254,7 +268,7 @@ onMounted(() => loadService())
 <template>
   <section class="container page-section service-page">
     <div class="service-toolbar">
-      <div><p class="eyebrow">{{ church?.name }}</p><h1>Registro de culto</h1></div>
+      <div class="service-toolbar__title"><p class="eyebrow">{{ church?.name }}</p><h1>Registro de culto</h1></div>
       <div class="toolbar-actions">
         <button class="button button--secondary" type="button" :disabled="loading" @click="refreshService">Atualizar</button>
         <button class="button button--secondary" type="button" @click="logoutAndRedirect">Sair</button>
@@ -272,7 +286,15 @@ onMounted(() => loadService())
 
     <template v-if="service">
       <div class="service-heading">
-        <div><p class="eyebrow">{{ service.date }}</p><h2>{{ serviceTypeLabel }}</h2></div>
+        <div class="service-heading__info" aria-label="Informações do culto">
+          <span class="service-tag service-tag--date"><small>Data</small>{{ formatServiceDate(service.date) }}</span>
+          <span class="service-tag service-tag--type">
+            <small>Tipo</small>
+            <span v-if="service.type === 'noite'" class="service-tag__icon" aria-hidden="true">🌙</span>
+            <span v-else-if="service.type === 'ebd'" class="service-tag__icon" aria-hidden="true">☀️</span>
+            {{ serviceTypeLabel(service.type) }}
+          </span>
+        </div>
         <div class="service-heading__actions">
           <button class="button button--whatsapp" type="button" @click="shareServiceOnWhatsApp">Compartilhar no WhatsApp</button>
           <button class="danger-button" type="button" :disabled="actionPending" @click="removeCurrentService">Excluir culto</button>
@@ -300,11 +322,24 @@ onMounted(() => loadService())
         <summary class="accordion-summary"><span><strong>Lista de Louvores</strong><small>{{ service.songs.length }} registrado(s)</small></span><span class="accordion-icon" aria-hidden="true">⌄</span></summary>
         <div class="accordion-content">
         <p class="section-helper">Busque por número ou por palavras do nome do louvor. Os resultados das coletâneas são ranqueados por relevância.</p>
+        <div class="song-group-control">
+          <label for="song-group">Grupo responsável</label>
+          <select id="song-group" v-model="selectedSongGroup" class="song-group-select">
+            <option v-for="group in worshipGroups" :key="group.value" :value="group.value">{{ group.label }}</option>
+          </select>
+          <button class="button button--secondary" type="button" :disabled="songPending" @click="addGroupToService">Adicionar grupo</button>
+        </div>
         <div class="inline-form autocomplete-field">
           <input v-model="songSearch" type="search" placeholder="Número ou nome do louvor" @input="findSongs">
           <div v-if="songOptions.length" class="suggestions"><button v-for="song in songOptions" :key="`${song.source ?? 'catalog'}-${song.id}`" type="button" @click="addSongToService(song)"><strong>{{ song.isLoose ? 'Avulso' : song.number }}</strong><span>{{ song.name }}<small v-if="song.collectionName">{{ song.collectionName }}</small></span></button></div>
         </div>
-        <ul v-if="service.songs.length" class="record-list"><li v-for="song in service.songs" :key="song.id"><span class="song-record-label"><span><strong>{{ song.isLoose ? 'Avulso' : song.number }}</strong> — {{ song.name }}</span><small v-if="song.collectionName">{{ song.collectionName }}</small></span><button class="icon-button" type="button" :aria-label="`Remover ${song.name}`" @click="removeSongFromService(song)">×</button></li></ul>
+        <ul v-if="service.songs.length" class="record-list">
+          <li v-for="song in service.songs" :key="song.id" :class="{ 'song-group-record': song.kind === 'group' }">
+            <span v-if="song.kind === 'group'" class="song-group-record__label">{{ worshipGroups.find((group) => group.value === song.group)?.label ?? song.group }}</span>
+            <span v-else class="song-record-label"><span><strong>{{ song.isLoose ? 'Avulso' : song.number }}</strong> — {{ song.name }}</span><small v-if="song.collectionName">{{ song.collectionName }}</small><small v-if="song.group">{{ worshipGroups.find((group) => group.value === song.group)?.label }}</small></span>
+            <button class="icon-button" type="button" :aria-label="`Remover ${song.kind === 'group' ? 'grupo' : song.name}`" @click="removeSongFromService(song)">×</button>
+          </li>
+        </ul>
         <p v-else class="empty-state">Nenhum louvor registrado neste culto.</p>
         <div class="section-actions">
           <button class="button button--whatsapp button--whatsapp-secondary" type="button" @click="shareSongListOnWhatsApp">Compartilhar louvores</button>
