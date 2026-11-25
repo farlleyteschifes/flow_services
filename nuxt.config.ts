@@ -52,7 +52,7 @@ export default defineNuxtConfig({
       runtimeCaching: []
     },
     devOptions: {
-      enabled: false
+      enabled: true
     }
   },
   routeRules: {
