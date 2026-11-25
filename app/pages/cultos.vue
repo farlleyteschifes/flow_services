@@ -359,8 +359,8 @@ onBeforeUnmount(closeFrequencyMonitor)
             <input v-model.number="frequencyDrafts[item.key]" class="frequency-input" type="number" min="0" step="1" :aria-label="`Informar ${item.label}`" @change="setFrequencyValue(item.key)">
             <div class="counter-actions">
               <input v-model.number="frequencySteps[item.key]" class="frequency-step-input" type="number" min="1" max="1000" step="1" :aria-label="`Quantidade para alterar ${item.label}`">
-              <button type="button" :aria-label="`Diminuir ${item.label}`" :disabled="actionPending || service.frequency[item.key] === 0" @click="updateFrequency(item.key, -1)">−</button>
-              <button type="button" :aria-label="`Aumentar ${item.label}`" :disabled="actionPending" @click="updateFrequency(item.key, 1)">+</button>
+              <button class="counter-button counter-button--decrease" type="button" :aria-label="`Diminuir ${item.label}`" :disabled="actionPending || service.frequency[item.key] === 0" @click="updateFrequency(item.key, -1)">−</button>
+              <button class="counter-button counter-button--increase" type="button" :aria-label="`Aumentar ${item.label}`" :disabled="actionPending" @click="updateFrequency(item.key, 1)">+</button>
             </div>
           </article>
           </div>

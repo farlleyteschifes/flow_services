@@ -683,6 +683,30 @@ h1 {
   background: #eaf5f8;
 }
 
+.counter-actions .counter-button--decrease {
+  border-color: #f0b4ad;
+  background: #fff7f5;
+  color: #b42318;
+}
+
+.counter-actions .counter-button--decrease:hover:not(:disabled),
+.counter-actions .counter-button--decrease:focus-visible:not(:disabled) {
+  border-color: #d92d20;
+  background: #fee4e2;
+}
+
+.counter-actions .counter-button--increase {
+  border-color: #8ed5b1;
+  background: #effcf5;
+  color: #087443;
+}
+
+.counter-actions .counter-button--increase:hover:not(:disabled),
+.counter-actions .counter-button--increase:focus-visible:not(:disabled) {
+  border-color: #12b76a;
+  background: #d1fadf;
+}
+
 .inline-form,
 .new-record-form {
   display: flex;
