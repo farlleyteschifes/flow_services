@@ -208,6 +208,16 @@ h1 {
   background: #075e54;
 }
 
+.button--monitor {
+  background: var(--color-primary-dark);
+  color: white;
+}
+
+.button--monitor:hover,
+.button--monitor:focus-visible {
+  background: #0b4052;
+}
+
 .button--whatsapp:hover,
 .button--whatsapp:focus-visible {
   background: #0b7165;
@@ -456,6 +466,14 @@ h1 {
   flex-wrap: wrap;
   gap: 0.5rem;
   align-items: center;
+}
+
+.action-icon--mobile {
+  display: none;
+}
+
+.action-label--mobile {
+  display: none;
 }
 
 .section-actions {
@@ -823,6 +841,114 @@ h1 {
   font-size: 0.875rem;
 }
 
+.frequency-monitor {
+  position: fixed;
+  z-index: 20;
+  inset: 0;
+  overflow: auto;
+  padding: clamp(1rem, 4vw, 3rem);
+  background: rgba(244, 247, 248, 0.98);
+}
+
+.frequency-monitor__content {
+  display: flex;
+  min-height: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.frequency-monitor__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.frequency-monitor__header .eyebrow {
+  margin-bottom: 0.35rem;
+}
+
+.frequency-monitor__header h2 {
+  margin: 0;
+  font-size: clamp(1.75rem, 5vw, 3rem);
+  letter-spacing: -0.04em;
+}
+
+.frequency-monitor__context {
+  margin: 0.5rem 0 0;
+  color: var(--color-muted);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.frequency-monitor__close {
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-size: 1.75rem;
+  line-height: 1;
+}
+
+.frequency-monitor__cards,
+.frequency-monitor__totals {
+  display: grid;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.frequency-monitor__cards {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.frequency-monitor__card,
+.frequency-monitor__totals article {
+  display: grid;
+  gap: 1rem;
+  padding: clamp(1rem, 3vw, 2rem);
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.frequency-monitor__card span,
+.frequency-monitor__totals span {
+  color: var(--color-muted);
+  font-size: clamp(0.85rem, 2vw, 1rem);
+  font-weight: 700;
+}
+
+.frequency-monitor__card strong,
+.frequency-monitor__totals strong {
+  color: var(--color-primary-dark);
+  font-size: clamp(2.5rem, 7vw, 5rem);
+  line-height: 1;
+}
+
+.frequency-monitor__totals {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.frequency-monitor__total-general {
+  border-color: var(--color-primary);
+  background: #eaf5f8 !important;
+}
+
+.frequency-monitor__status {
+  margin: 1.5rem 0 0;
+  color: var(--color-muted);
+  font-size: 0.875rem;
+  text-align: center;
+}
+
 @media (max-width: 720px) {
   .page-section {
     width: min(100% - 1rem, 1120px);
@@ -980,7 +1106,9 @@ h1 {
 
   .service-heading__actions {
     align-items: stretch;
-    flex-direction: column;
+    flex-direction: row;
+    width: 100%;
+    gap: 0.35rem;
   }
 
   .frequency-grid,
@@ -988,10 +1116,75 @@ h1 {
     grid-template-columns: 1fr;
   }
 
+  .frequency-monitor__content {
+    justify-content: flex-start;
+    padding-top: 1rem;
+  }
+
+  .frequency-monitor__cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.6rem;
+    margin-top: 1.25rem;
+  }
+
+  .frequency-monitor__totals {
+    grid-template-columns: 1fr;
+    gap: 0.6rem;
+    margin-top: 0.6rem;
+  }
+
+  .frequency-monitor__card,
+  .frequency-monitor__totals article {
+    gap: 0.6rem;
+    padding: 0.9rem;
+    border-radius: 0.75rem;
+  }
+
+  .frequency-monitor__card strong,
+  .frequency-monitor__totals strong {
+    font-size: 2.5rem;
+  }
+
   .service-selector .button,
   .danger-button,
   .service-heading__actions .button {
     width: 100%;
+  }
+
+  .service-heading__actions .button,
+  .service-heading__actions .danger-button {
+    width: auto;
+    min-width: 0;
+    padding: 0.5rem 0.35rem;
+    font-size: 0.75rem;
+    white-space: nowrap;
+  }
+
+  .service-heading__actions .button {
+    flex: 1.35;
+  }
+
+  .service-heading__actions .danger-button {
+    flex: 0.55;
+  }
+
+  .service-heading__actions .action-label--full {
+    display: none;
+  }
+
+  .service-heading__actions .action-icon--mobile {
+    display: inline;
+    font-size: 1.35rem;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .service-heading__actions .action-label--mobile {
+    display: inline;
+  }
+
+  .service-heading__actions .button {
+    gap: 0.25rem;
   }
 
   .section-actions .button {

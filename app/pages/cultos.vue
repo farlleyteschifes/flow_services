@@ -37,6 +37,9 @@ const loading = ref(false)
 const actionPending = ref(false)
 const errorMessage = ref('')
 const savedMessage = ref('')
+const frequencyMonitorOpen = ref(false)
+const frequencyMonitorPending = ref(false)
+let frequencyMonitorInterval: ReturnType<typeof setInterval> | undefined
 
 const songSearch = ref('')
 const songOptions = ref<Song[]>([])
@@ -57,6 +60,50 @@ const showSaved = (message = 'Alteração salva.') => {
 const handleError = (error: unknown) => { errorMessage.value = messageFor(error) }
 const syncFrequencyDrafts = (currentService: Service) => {
   for (const item of frequencyItems) frequencyDrafts[item.key] = currentService.frequency[item.key]
+}
+
+const frequencyMonitorTotals = computed(() => {
+  const frequency = service.value?.frequency
+  const adultVisitors = frequency?.visitors ?? 0
+  const visitingChildren = frequency?.visitingChildren ?? 0
+  const adultMembers = frequency?.adults ?? 0
+  const memberChildren = frequency?.children ?? 0
+
+  return {
+    visitors: adultVisitors + visitingChildren,
+    members: adultMembers + memberChildren,
+    general: adultVisitors + visitingChildren + adultMembers + memberChildren
+  }
+})
+
+const refreshFrequencyMonitor = async () => {
+  if (!frequencyMonitorOpen.value || frequencyMonitorPending.value) return
+  frequencyMonitorPending.value = true
+  try {
+    const response = await getService(selectedDate.value, selectedType.value)
+    if (response.data.service) {
+      service.value = response.data.service
+      syncFrequencyDrafts(response.data.service)
+    }
+  } catch (error) {
+    handleError(error)
+  } finally {
+    frequencyMonitorPending.value = false
+  }
+}
+
+const closeFrequencyMonitor = () => {
+  frequencyMonitorOpen.value = false
+  if (frequencyMonitorInterval) {
+    clearInterval(frequencyMonitorInterval)
+    frequencyMonitorInterval = undefined
+  }
+}
+
+const openFrequencyMonitor = async () => {
+  frequencyMonitorOpen.value = true
+  await refreshFrequencyMonitor()
+  frequencyMonitorInterval = setInterval(() => { void refreshFrequencyMonitor() }, 5000)
 }
 
 const loadService = async (createIfMissing = true) => {
@@ -263,6 +310,7 @@ const logoutAndRedirect = async () => {
 }
 
 onMounted(() => loadService())
+onBeforeUnmount(closeFrequencyMonitor)
 </script>
 
 <template>
@@ -296,8 +344,9 @@ onMounted(() => loadService())
           </span>
         </div>
         <div class="service-heading__actions">
-          <button class="button button--whatsapp" type="button" @click="shareServiceOnWhatsApp">Compartilhar no WhatsApp</button>
-          <button class="danger-button" type="button" :disabled="actionPending" @click="removeCurrentService">Excluir culto</button>
+          <button class="button button--whatsapp" type="button" aria-label="Compartilhar no WhatsApp" title="Compartilhar no WhatsApp" @click="shareServiceOnWhatsApp"><span class="action-label action-label--full">Compartilhar no WhatsApp</span><span class="action-icon action-icon--mobile" aria-hidden="true">↗</span><span class="action-label action-label--mobile">WhatsApp</span></button>
+          <button class="button button--monitor" type="button" aria-label="Monitorar frequência" title="Monitorar frequência" @click="openFrequencyMonitor"><span class="action-label action-label--full">Monitorar frequência</span><span class="action-icon action-icon--mobile" aria-hidden="true">◉</span><span class="action-label action-label--mobile">Monitorar</span></button>
+          <button class="danger-button" type="button" aria-label="Excluir culto" title="Excluir culto" :disabled="actionPending" @click="removeCurrentService"><span class="action-label action-label--full">Excluir culto</span><span class="action-icon action-icon--mobile" aria-hidden="true">×</span></button>
         </div>
       </div>
 
@@ -363,5 +412,48 @@ onMounted(() => loadService())
         </div>
       </details>
     </template>
+
+    <Teleport to="body">
+      <div v-if="frequencyMonitorOpen" class="frequency-monitor" role="dialog" aria-modal="true" aria-labelledby="frequency-monitor-title">
+        <div class="frequency-monitor__content">
+          <div class="frequency-monitor__header">
+            <div>
+              <p class="eyebrow">{{ church?.name }}</p>
+              <h2 id="frequency-monitor-title">Frequência do culto</h2>
+              <p class="frequency-monitor__context">
+                {{ formatServiceDate(service?.date ?? selectedDate) }} · {{ serviceTypeLabel(service?.type ?? selectedType) }}
+              </p>
+            </div>
+            <button class="frequency-monitor__close" type="button" aria-label="Fechar monitoramento" @click="closeFrequencyMonitor">×</button>
+          </div>
+
+          <div class="frequency-monitor__cards">
+            <article v-for="item in frequencyItems" :key="item.key" class="frequency-monitor__card">
+              <span>{{ item.label }}</span>
+              <strong>{{ service?.frequency[item.key] ?? 0 }}</strong>
+            </article>
+          </div>
+
+          <div class="frequency-monitor__totals">
+            <article>
+              <span>Total de Visitantes</span>
+              <strong>{{ frequencyMonitorTotals.visitors }}</strong>
+            </article>
+            <article>
+              <span>Total de Membros</span>
+              <strong>{{ frequencyMonitorTotals.members }}</strong>
+            </article>
+            <article class="frequency-monitor__total-general">
+              <span>Total Geral</span>
+              <strong>{{ frequencyMonitorTotals.general }}</strong>
+            </article>
+          </div>
+
+          <p class="frequency-monitor__status" role="status">
+            Atualização automática a cada 5 segundos<span v-if="frequencyMonitorPending"> · Atualizando...</span>
+          </p>
+        </div>
+      </div>
+    </Teleport>
   </section>
 </template>
