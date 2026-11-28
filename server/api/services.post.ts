@@ -31,6 +31,7 @@ export default defineEventHandler(async (event) => {
       observation: '',
       frequency: emptyFrequency(),
       songs: [],
+      visitors: [],
       participants: emptyParticipants(),
       createdAt: now,
       updatedAt: now

@@ -44,6 +44,7 @@ export type Song = {
   group: WorshipGroup
 }
 export type Participant = { id: string; name: string }
+export type Visitor = { id: string; name: string; phone?: string; observation?: string }
 export type Service = {
   id: string
   date: string
@@ -51,6 +52,7 @@ export type Service = {
   observation: string
   frequency: Record<FrequencyKey, number>
   songs: Song[]
+  visitors: Visitor[]
   participants: Record<ParticipantRole, Participant[]>
 }
 export type Member = { id: string; name: string; active: boolean }
@@ -62,6 +64,30 @@ export function serviceTypeLabel(type: ServiceType) {
 export function formatServiceDate(date: string) {
   const [year, month, day] = date.split('-')
   return `${day}/${month}/${year}`
+}
+
+export function formatVisitorPhone(value: string) {
+  const digits = value.replace(/\D/g, '').slice(0, 11)
+  if (digits.length <= 2) return digits ? `(${digits}` : ''
+  if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`
+}
+
+export function buildVisitorShareText(service: Service, churchName: string) {
+  const lines = [
+    `*${churchName} — Visitantes do culto*`,
+    `*Data:* ${formatServiceDate(service.date)}`,
+    `*Tipo:* ${serviceTypeLabel(service.type)}`,
+    '',
+    ...(service.visitors.length
+      ? service.visitors.flatMap((visitor, index) => [
+          `${index + 1}. *${visitor.name}*${visitor.phone ? ` — ${visitor.phone}` : ''}`,
+          ...(visitor.observation ? [`   Observação: ${visitor.observation}`] : [])
+        ])
+      : ['Nenhum visitante registrado'])
+  ]
+
+  return lines.join('\n')
 }
 
 export function buildServiceShareText(service: Service, churchName: string) {
@@ -130,6 +156,12 @@ export function useService() {
   const updateObservation = (serviceId: string, observation: string) => $fetch<ApiEnvelope<{ service: Service }>>(
     `/api/services/${serviceId}/observation`, { method: 'PATCH', body: { observation }, headers: mutationHeaders() }
   )
+  const addVisitor = (serviceId: string, name: string, phone: string, observation: string) => $fetch<ApiEnvelope<{ service: Service, visitor: Visitor }>>(
+    `/api/services/${serviceId}/visitors`, { method: 'POST', body: { name, phone, observation }, headers: mutationHeaders() }
+  )
+  const removeVisitor = (serviceId: string, visitorId: string) => $fetch<ApiEnvelope<{ service: Service, removed: boolean }>>(
+    `/api/services/${serviceId}/visitors/${visitorId}`, { method: 'DELETE', headers: mutationHeaders() }
+  )
   const addSong = (serviceId: string, songId: string, collectionName?: string, group?: WorshipGroup) => $fetch<ApiEnvelope<{ service: Service, added: boolean }>>(
     `/api/services/${serviceId}/songs`, { method: 'POST', body: { songId, collectionName, group }, headers: mutationHeaders() }
   )
@@ -159,7 +191,7 @@ export function useService() {
   })
 
   return {
-    getService, createService, changeFrequency, setFrequency, updateObservation, addSong, removeSong,
+    getService, createService, changeFrequency, setFrequency, updateObservation, addVisitor, removeVisitor, addSong, removeSong,
     addParticipant, removeParticipant, deleteService, searchSongs, searchCollectionSongs, addGroup,
     createSong, searchMembers, createMember
   }

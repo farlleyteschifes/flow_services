@@ -82,6 +82,47 @@ export function validateObservation(value: unknown) {
   return value.trim()
 }
 
+export function validateVisitorName(value: unknown) {
+  if (typeof value !== 'string' || !value.trim() || value.trim().length > 120) {
+    throw badRequest('Informe o nome do visitante com até 120 caracteres.', {
+      name: ['O nome do visitante é obrigatório e deve ter até 120 caracteres.']
+    })
+  }
+
+  return value.trim()
+}
+
+export function validateVisitorPhone(value: unknown) {
+  if (value === undefined || value === null || value === '') return ''
+
+  if (typeof value !== 'string' || !/^[\d\s()+-]+$/.test(value)) {
+    throw badRequest('O celular deve conter somente números.', {
+      phone: ['Informe somente números no celular.']
+    })
+  }
+
+  const digits = value.replace(/\D/g, '')
+  if (digits.length !== 11) {
+    throw badRequest('Informe um celular com DDD no formato (99) 99999-9999.', {
+      phone: ['O celular deve ter 11 números, incluindo o DDD.']
+    })
+  }
+
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`
+}
+
+export function validateVisitorObservation(value: unknown) {
+  if (value === undefined || value === null) return ''
+
+  if (typeof value !== 'string' || value.length > 5000) {
+    throw badRequest('A observação do visitante deve ter até 5000 caracteres.', {
+      observation: ['Informe uma observação com até 5000 caracteres.']
+    })
+  }
+
+  return value.trim()
+}
+
 export function emptyFrequency(): Frequency {
   return {
     adults: 0,
@@ -120,6 +161,12 @@ export function serializeService(service: ServiceDocument) {
           ...(song.collectionName ? { collectionName: song.collectionName } : {}),
           ...(song.group ? { group: song.group } : {})
         }),
+    visitors: (service.visitors ?? []).map((visitor) => ({
+      id: visitor.visitorId.toHexString(),
+      name: visitor.name,
+      ...(visitor.phone ? { phone: visitor.phone } : {}),
+      ...(visitor.observation ? { observation: visitor.observation } : {})
+    })),
     participants: {
       worship: service.participants.worship.map((member) => ({
         id: member.memberId?.toHexString(),

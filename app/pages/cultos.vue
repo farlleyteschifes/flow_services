@@ -10,10 +10,13 @@ import {
   type Service,
   type ServiceType,
   type Song,
+  type Visitor,
   type WorshipGroup,
   buildServiceShareText,
+  buildVisitorShareText,
   buildSongListShareText,
   formatServiceDate,
+  formatVisitorPhone,
   serviceTypeLabel
 } from '~/composables/useService'
 
@@ -23,6 +26,7 @@ const { church, logout } = useAuth()
 const {
   getService, createService, changeFrequency, setFrequency, addSong, removeSong,
   updateObservation,
+  addVisitor, removeVisitor,
   addParticipant, removeParticipant, deleteService, searchSongs, searchCollectionSongs, addGroup,
   createSong, searchMembers, createMember
 } = useService()
@@ -54,6 +58,9 @@ const memberPending = reactive<Record<ParticipantRole, boolean>>({ worship: fals
 const frequencyDrafts = reactive<Record<FrequencyKey, number>>({ adults: 0, visitors: 0, children: 0, visitingChildren: 0 })
 const frequencySteps = reactive<Record<FrequencyKey, number>>({ adults: 1, visitors: 1, children: 1, visitingChildren: 1 })
 const observationPending = ref(false)
+const visitorModalOpen = ref(false)
+const visitorPending = ref(false)
+const visitorDraft = reactive({ name: '', phone: '', observation: '' })
 
 const showSaved = (message = 'Alteração salva.') => {
   savedMessage.value = message
@@ -323,6 +330,67 @@ const shareSongListOnWhatsApp = () => {
   window.open(`https://wa.me/?text=${message}`, '_blank', 'noopener,noreferrer')
 }
 
+const resetVisitorDraft = () => {
+  visitorDraft.name = ''
+  visitorDraft.phone = ''
+  visitorDraft.observation = ''
+}
+
+const closeVisitorModal = () => {
+  if (!visitorPending.value) visitorModalOpen.value = false
+}
+
+const openVisitorModal = () => {
+  resetVisitorDraft()
+  visitorModalOpen.value = true
+}
+
+const formatVisitorPhoneInput = () => {
+  visitorDraft.phone = formatVisitorPhone(visitorDraft.phone)
+}
+
+const saveVisitor = async () => {
+  if (!service.value || visitorPending.value) return
+  if (!visitorDraft.name.trim()) {
+    errorMessage.value = 'Informe o nome do visitante.'
+    return
+  }
+
+  visitorPending.value = true
+  errorMessage.value = ''
+  try {
+    const response = await addVisitor(service.value.id, visitorDraft.name, visitorDraft.phone, visitorDraft.observation)
+    service.value = response.data.service
+    visitorModalOpen.value = false
+    resetVisitorDraft()
+    showSaved('Visitante adicionado.')
+  } catch (error) {
+    handleError(error)
+  } finally {
+    visitorPending.value = false
+  }
+}
+
+const deleteVisitor = async (visitor: Visitor) => {
+  if (!service.value || visitorPending.value || !window.confirm(`Excluir o visitante ${visitor.name}?`)) return
+  visitorPending.value = true
+  try {
+    const response = await removeVisitor(service.value.id, visitor.id)
+    service.value = response.data.service
+    showSaved('Visitante excluído.')
+  } catch (error) {
+    handleError(error)
+  } finally {
+    visitorPending.value = false
+  }
+}
+
+const shareVisitorsOnWhatsApp = () => {
+  if (!service.value) return
+  const message = encodeURIComponent(buildVisitorShareText(service.value, church.value?.name ?? 'Igreja'))
+  window.open(`https://wa.me/?text=${message}`, '_blank', 'noopener,noreferrer')
+}
+
 const logoutAndRedirect = async () => {
   await logout()
   await navigateTo('/login')
@@ -363,8 +431,9 @@ onBeforeUnmount(closeFrequencyMonitor)
           </span>
         </div>
         <div class="service-heading__actions">
-          <button class="button button--whatsapp" type="button" aria-label="Compartilhar no WhatsApp" title="Compartilhar no WhatsApp" @click="shareServiceOnWhatsApp"><span class="action-label action-label--full">Compartilhar no WhatsApp</span><span class="action-icon action-icon--mobile" aria-hidden="true">↗</span><span class="action-label action-label--mobile">WhatsApp</span></button>
           <button class="button button--monitor" type="button" aria-label="Monitorar frequência" title="Monitorar frequência" @click="openFrequencyMonitor"><span class="action-label action-label--full">Monitorar frequência</span><span class="action-icon action-icon--mobile" aria-hidden="true">◉</span><span class="action-label action-label--mobile">Monitorar</span></button>
+          <button class="button button--visitor" type="button" aria-label="Cadastrar visitante" title="Cadastrar visitante" @click="openVisitorModal"><span class="action-label action-label--full">Cadastrar visitante</span><span class="action-icon action-icon--mobile" aria-hidden="true">👤</span><span class="action-label action-label--mobile">Visitante</span></button>
+          <button class="button button--whatsapp" type="button" aria-label="Compartilhar no WhatsApp" title="Compartilhar no WhatsApp" @click="shareServiceOnWhatsApp"><span class="action-label action-label--full">Compartilhar no WhatsApp</span><span class="action-icon action-icon--mobile" aria-hidden="true">↗</span><span class="action-label action-label--mobile">WhatsApp</span></button>
           <button class="danger-button" type="button" aria-label="Excluir culto" title="Excluir culto" :disabled="actionPending" @click="removeCurrentService"><span class="action-label action-label--full">Excluir culto</span><span class="action-icon action-icon--mobile" aria-hidden="true">×</span></button>
         </div>
       </div>
@@ -442,6 +511,23 @@ onBeforeUnmount(closeFrequencyMonitor)
           </div>
         </div>
       </details>
+
+      <details class="service-section service-accordion">
+        <summary class="accordion-summary"><span><strong>Visitantes</strong><small>{{ service.visitors.length }} registrado(s)</small></span><span class="accordion-icon" aria-hidden="true">⌄</span></summary>
+        <div class="accordion-content">
+          <p class="section-helper">Cadastros feitos neste culto. Visitantes com o mesmo nome podem ser registrados.</p>
+          <ul v-if="service.visitors.length" class="record-list visitor-list">
+            <li v-for="visitor in service.visitors" :key="visitor.id">
+              <span class="visitor-record-label"><strong>{{ visitor.name }}</strong><small v-if="visitor.phone">{{ visitor.phone }}</small><small v-if="visitor.observation">{{ visitor.observation }}</small></span>
+              <button class="icon-button" type="button" :aria-label="`Excluir visitante ${visitor.name}`" :disabled="visitorPending" @click="deleteVisitor(visitor)">×</button>
+            </li>
+          </ul>
+          <p v-else class="empty-state">Nenhum visitante registrado.</p>
+          <div class="section-actions">
+            <button class="button button--whatsapp button--whatsapp-secondary" type="button" @click="shareVisitorsOnWhatsApp">Compartilhar visitantes</button>
+          </div>
+        </div>
+      </details>
     </template>
 
     <Teleport to="body">
@@ -487,6 +573,26 @@ onBeforeUnmount(closeFrequencyMonitor)
             Atualização automática a cada 5 segundos<span v-if="frequencyMonitorPending"> · Atualizando...</span>
           </p>
         </div>
+      </div>
+    </Teleport>
+
+    <Teleport to="body">
+      <div v-if="visitorModalOpen" class="visitor-modal" role="dialog" aria-modal="true" aria-labelledby="visitor-modal-title" @click.self="closeVisitorModal">
+        <form class="visitor-modal__content" @submit.prevent="saveVisitor">
+          <div class="visitor-modal__header">
+            <div>
+              <p class="eyebrow">{{ church?.name }}</p>
+              <h2 id="visitor-modal-title">Cadastrar visitante</h2>
+            </div>
+            <button class="frequency-monitor__close" type="button" aria-label="Fechar cadastro de visitante" @click="closeVisitorModal">×</button>
+          </div>
+          <div class="visitor-modal__fields">
+            <div class="field"><label for="visitor-name">Nome *</label><input id="visitor-name" v-model="visitorDraft.name" type="text" maxlength="120" required autofocus></div>
+            <div class="field"><label for="visitor-phone">Celular</label><input id="visitor-phone" v-model="visitorDraft.phone" type="tel" inputmode="numeric" placeholder="(99) 99999-9999" maxlength="15" @input="formatVisitorPhoneInput"></div>
+            <div class="field"><label for="visitor-observation">Observação</label><textarea id="visitor-observation" v-model="visitorDraft.observation" rows="4" maxlength="5000" placeholder="Observação (opcional)"></textarea></div>
+          </div>
+          <button class="button button--primary" type="submit" :disabled="visitorPending">{{ visitorPending ? 'Salvando...' : 'Salvar visitante' }}</button>
+        </form>
       </div>
     </Teleport>
   </section>

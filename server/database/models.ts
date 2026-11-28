@@ -72,6 +72,13 @@ export type MemberSnapshot = {
   name: string
 }
 
+export type VisitorSnapshot = {
+  visitorId: ObjectId
+  name: string
+  phone?: string
+  observation?: string
+}
+
 export type ServiceDocument = {
   _id?: ObjectId
   churchId: ObjectId
@@ -80,6 +87,7 @@ export type ServiceDocument = {
   observation?: string
   frequency: Frequency
   songs: SongSnapshot[]
+  visitors?: VisitorSnapshot[]
   participants: {
     worship: MemberSnapshot[]
     word: MemberSnapshot[]

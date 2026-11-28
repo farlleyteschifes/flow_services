@@ -6,7 +6,9 @@ import {
   validateFrequencyKey,
   validateServiceDate,
   validateServiceType,
-  validateObservation
+  validateObservation,
+  validateVisitorName,
+  validateVisitorPhone
 } from '../../server/utils/services'
 
 describe('regras de cultos e frequência', () => {
@@ -35,5 +37,14 @@ describe('regras de cultos e frequência', () => {
     expect(validateObservation(undefined)).toBe('')
     expect(validateObservation('  Aviso importante  ')).toBe('Aviso importante')
     expect(() => validateObservation('x'.repeat(5001))).toThrow(ApiError)
+  })
+
+  it('valida e formata o celular do visitante', () => {
+    expect(validateVisitorName('  Ana  ')).toBe('Ana')
+    expect(validateVisitorPhone('11987654321')).toBe('(11) 98765-4321')
+    expect(validateVisitorPhone('(11) 98765-4321')).toBe('(11) 98765-4321')
+    expect(() => validateVisitorName('')).toThrow(ApiError)
+    expect(() => validateVisitorPhone('1198765432')).toThrow(ApiError)
+    expect(() => validateVisitorPhone('11abc987654321')).toThrow(ApiError)
   })
 })
