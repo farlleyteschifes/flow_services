@@ -77,6 +77,7 @@ export type VisitorSnapshot = {
   name: string
   phone?: string
   observation?: string
+  watchedYoutube?: boolean
 }
 
 export type ServiceDocument = {

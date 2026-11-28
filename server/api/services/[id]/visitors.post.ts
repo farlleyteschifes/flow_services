@@ -7,7 +7,7 @@ import { getAuthenticatedChurch } from '../../../utils/auth'
 import { objectIdFromParam } from '../../../utils/mongo-validation'
 import { serializeService, validateVisitorName, validateVisitorObservation, validateVisitorPhone } from '../../../utils/services'
 
-type VisitorBody = { name?: unknown; phone?: unknown; observation?: unknown }
+type VisitorBody = { name?: unknown; phone?: unknown; observation?: unknown; watchedYoutube?: unknown }
 
 export default defineEventHandler(async (event) => {
   try {
@@ -18,7 +18,8 @@ export default defineEventHandler(async (event) => {
       visitorId: new ObjectId(),
       name: validateVisitorName(body?.name),
       phone: validateVisitorPhone(body?.phone),
-      observation: validateVisitorObservation(body?.observation)
+      observation: validateVisitorObservation(body?.observation),
+      watchedYoutube: body?.watchedYoutube === true
     }
     const services = await servicesCollection()
     const result = await services.updateOne(
@@ -33,7 +34,7 @@ export default defineEventHandler(async (event) => {
     const service = await services.findOne({ _id: serviceId, churchId: church._id! })
     return apiSuccess({
       service: serializeService(service!),
-      visitor: { id: visitor.visitorId.toHexString(), name: visitor.name, phone: visitor.phone, observation: visitor.observation }
+      visitor: { id: visitor.visitorId.toHexString(), name: visitor.name, phone: visitor.phone, observation: visitor.observation, watchedYoutube: visitor.watchedYoutube }
     })
   } catch (error) {
     return apiError(event, error)

@@ -44,7 +44,7 @@ export type Song = {
   group: WorshipGroup
 }
 export type Participant = { id: string; name: string }
-export type Visitor = { id: string; name: string; phone?: string; observation?: string }
+export type Visitor = { id: string; name: string; phone?: string; observation?: string; watchedYoutube?: boolean }
 export type Service = {
   id: string
   date: string
@@ -81,7 +81,7 @@ export function buildVisitorShareText(service: Service, churchName: string) {
     '',
     ...(service.visitors.length
       ? service.visitors.flatMap((visitor, index) => [
-          `${index + 1}. *${visitor.name}*${visitor.phone ? ` — ${visitor.phone}` : ''}`,
+          `${index + 1}. *${visitor.name}*${visitor.phone ? ` — ${visitor.phone}` : ''}${visitor.watchedYoutube ? ' — Assistiu pelo YouTube' : ''}`,
           ...(visitor.observation ? [`   Observação: ${visitor.observation}`] : [])
         ])
       : ['Nenhum visitante registrado'])
@@ -156,8 +156,8 @@ export function useService() {
   const updateObservation = (serviceId: string, observation: string) => $fetch<ApiEnvelope<{ service: Service }>>(
     `/api/services/${serviceId}/observation`, { method: 'PATCH', body: { observation }, headers: mutationHeaders() }
   )
-  const addVisitor = (serviceId: string, name: string, phone: string, observation: string) => $fetch<ApiEnvelope<{ service: Service, visitor: Visitor }>>(
-    `/api/services/${serviceId}/visitors`, { method: 'POST', body: { name, phone, observation }, headers: mutationHeaders() }
+  const addVisitor = (serviceId: string, name: string, phone: string, observation: string, watchedYoutube: boolean) => $fetch<ApiEnvelope<{ service: Service, visitor: Visitor }>>(
+    `/api/services/${serviceId}/visitors`, { method: 'POST', body: { name, phone, observation, watchedYoutube }, headers: mutationHeaders() }
   )
   const removeVisitor = (serviceId: string, visitorId: string) => $fetch<ApiEnvelope<{ service: Service, removed: boolean }>>(
     `/api/services/${serviceId}/visitors/${visitorId}`, { method: 'DELETE', headers: mutationHeaders() }

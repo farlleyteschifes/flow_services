@@ -60,7 +60,7 @@ const frequencySteps = reactive<Record<FrequencyKey, number>>({ adults: 1, visit
 const observationPending = ref(false)
 const visitorModalOpen = ref(false)
 const visitorPending = ref(false)
-const visitorDraft = reactive({ name: '', phone: '', observation: '' })
+const visitorDraft = reactive({ name: '', phone: '', observation: '', watchedYoutube: false })
 
 const showSaved = (message = 'Alteração salva.') => {
   savedMessage.value = message
@@ -334,6 +334,7 @@ const resetVisitorDraft = () => {
   visitorDraft.name = ''
   visitorDraft.phone = ''
   visitorDraft.observation = ''
+  visitorDraft.watchedYoutube = false
 }
 
 const closeVisitorModal = () => {
@@ -359,7 +360,7 @@ const saveVisitor = async () => {
   visitorPending.value = true
   errorMessage.value = ''
   try {
-    const response = await addVisitor(service.value.id, visitorDraft.name, visitorDraft.phone, visitorDraft.observation)
+    const response = await addVisitor(service.value.id, visitorDraft.name, visitorDraft.phone, visitorDraft.observation, visitorDraft.watchedYoutube)
     service.value = response.data.service
     visitorModalOpen.value = false
     resetVisitorDraft()
@@ -518,7 +519,7 @@ onBeforeUnmount(closeFrequencyMonitor)
           <p class="section-helper">Cadastros feitos neste culto. Visitantes com o mesmo nome podem ser registrados.</p>
           <ul v-if="service.visitors.length" class="record-list visitor-list">
             <li v-for="visitor in service.visitors" :key="visitor.id">
-              <span class="visitor-record-label"><strong>{{ visitor.name }}</strong><small v-if="visitor.phone">{{ visitor.phone }}</small><small v-if="visitor.observation">{{ visitor.observation }}</small></span>
+              <span class="visitor-record-label"><strong>{{ visitor.name }}</strong><small v-if="visitor.phone">{{ visitor.phone }}</small><small v-if="visitor.watchedYoutube" class="visitor-youtube-status">Assistiu pelo YouTube</small><small v-if="visitor.observation">{{ visitor.observation }}</small></span>
               <button class="icon-button" type="button" :aria-label="`Excluir visitante ${visitor.name}`" :disabled="visitorPending" @click="deleteVisitor(visitor)">×</button>
             </li>
           </ul>
@@ -590,6 +591,7 @@ onBeforeUnmount(closeFrequencyMonitor)
             <div class="field"><label for="visitor-name">Nome *</label><input id="visitor-name" v-model="visitorDraft.name" type="text" maxlength="120" required autofocus></div>
             <div class="field"><label for="visitor-phone">Celular</label><input id="visitor-phone" v-model="visitorDraft.phone" type="tel" inputmode="numeric" placeholder="(99) 99999-9999" maxlength="15" @input="formatVisitorPhoneInput"></div>
             <div class="field"><label for="visitor-observation">Observação</label><textarea id="visitor-observation" v-model="visitorDraft.observation" rows="4" maxlength="5000" placeholder="Observação (opcional)"></textarea></div>
+            <label class="checkbox-field"><input v-model="visitorDraft.watchedYoutube" type="checkbox"><span>Assistiu o culto pelo YouTube</span></label>
           </div>
           <button class="button button--primary" type="submit" :disabled="visitorPending">{{ visitorPending ? 'Salvando...' : 'Salvar visitante' }}</button>
         </form>

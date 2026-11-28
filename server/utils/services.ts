@@ -165,7 +165,8 @@ export function serializeService(service: ServiceDocument) {
       id: visitor.visitorId.toHexString(),
       name: visitor.name,
       ...(visitor.phone ? { phone: visitor.phone } : {}),
-      ...(visitor.observation ? { observation: visitor.observation } : {})
+      ...(visitor.observation ? { observation: visitor.observation } : {}),
+      ...(visitor.watchedYoutube ? { watchedYoutube: true } : {})
     })),
     participants: {
       worship: service.participants.worship.map((member) => ({
