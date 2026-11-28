@@ -5,7 +5,8 @@ import {
   validateFrequencyDelta,
   validateFrequencyKey,
   validateServiceDate,
-  validateServiceType
+  validateServiceType,
+  validateObservation
 } from '../../server/utils/services'
 
 describe('regras de cultos e frequência', () => {
@@ -28,5 +29,11 @@ describe('regras de cultos e frequência', () => {
     expect(() => validateFrequencyKey('total')).toThrow(ApiError)
     expect(() => validateFrequencyDelta(0)).toThrow(ApiError)
     expect(() => validateFrequencyDelta(1001)).toThrow(ApiError)
+  })
+
+  it('aceita observação opcional e limita seu tamanho', () => {
+    expect(validateObservation(undefined)).toBe('')
+    expect(validateObservation('  Aviso importante  ')).toBe('Aviso importante')
+    expect(() => validateObservation('x'.repeat(5001))).toThrow(ApiError)
   })
 })

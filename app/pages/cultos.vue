@@ -22,6 +22,7 @@ definePageMeta({ middleware: 'auth' })
 const { church, logout } = useAuth()
 const {
   getService, createService, changeFrequency, setFrequency, addSong, removeSong,
+  updateObservation,
   addParticipant, removeParticipant, deleteService, searchSongs, searchCollectionSongs, addGroup,
   createSong, searchMembers, createMember
 } = useService()
@@ -52,6 +53,7 @@ const selectedMemberIds = reactive<Record<ParticipantRole, string | null>>({ wor
 const memberPending = reactive<Record<ParticipantRole, boolean>>({ worship: false, word: false, gate: false })
 const frequencyDrafts = reactive<Record<FrequencyKey, number>>({ adults: 0, visitors: 0, children: 0, visitingChildren: 0 })
 const frequencySteps = reactive<Record<FrequencyKey, number>>({ adults: 1, visitors: 1, children: 1, visitingChildren: 1 })
+const observationPending = ref(false)
 
 const showSaved = (message = 'Alteração salva.') => {
   savedMessage.value = message
@@ -178,6 +180,23 @@ const setFrequencyValue = async (category: FrequencyKey) => {
     handleError(error)
   } finally {
     actionPending.value = false
+  }
+}
+
+const saveObservation = async () => {
+  if (!service.value || observationPending.value) return
+  const observation = service.value.observation.trim()
+
+  observationPending.value = true
+  errorMessage.value = ''
+  try {
+    const response = await updateObservation(service.value.id, observation)
+    service.value = response.data.service
+    showSaved()
+  } catch (error) {
+    handleError(error)
+  } finally {
+    observationPending.value = false
   }
 }
 
@@ -409,6 +428,18 @@ onBeforeUnmount(closeFrequencyMonitor)
             <p v-else class="empty-state">Nenhum participante.</p>
           </article>
         </div>
+        </div>
+      </details>
+
+      <details class="service-section service-accordion">
+        <summary class="accordion-summary"><span><strong>Observação</strong><small>Campo opcional</small></span><span class="accordion-icon" aria-hidden="true">⌄</span></summary>
+        <div class="accordion-content">
+          <p class="section-helper">Registre qualquer informação importante sobre este culto.</p>
+          <div class="field observation-field">
+            <label for="service-observation">Observação</label>
+            <textarea id="service-observation" v-model="service.observation" rows="5" maxlength="5000" placeholder="Digite uma observação (opcional)" :disabled="observationPending" @blur="saveObservation"></textarea>
+            <small class="field-hint">{{ service.observation.length }}/5000</small>
+          </div>
         </div>
       </details>
     </template>

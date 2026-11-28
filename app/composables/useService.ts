@@ -48,6 +48,7 @@ export type Service = {
   id: string
   date: string
   type: ServiceType
+  observation: string
   frequency: Record<FrequencyKey, number>
   songs: Song[]
   participants: Record<ParticipantRole, Participant[]>
@@ -126,6 +127,9 @@ export function useService() {
   const setFrequency = (serviceId: string, category: FrequencyKey, value: number) => $fetch<ApiEnvelope<{ service: Service, changed: boolean }>>(
     `/api/services/${serviceId}/frequency`, { method: 'PUT', body: { category, value }, headers: mutationHeaders() }
   )
+  const updateObservation = (serviceId: string, observation: string) => $fetch<ApiEnvelope<{ service: Service }>>(
+    `/api/services/${serviceId}/observation`, { method: 'PATCH', body: { observation }, headers: mutationHeaders() }
+  )
   const addSong = (serviceId: string, songId: string, collectionName?: string, group?: WorshipGroup) => $fetch<ApiEnvelope<{ service: Service, added: boolean }>>(
     `/api/services/${serviceId}/songs`, { method: 'POST', body: { songId, collectionName, group }, headers: mutationHeaders() }
   )
@@ -155,7 +159,7 @@ export function useService() {
   })
 
   return {
-    getService, createService, changeFrequency, setFrequency, addSong, removeSong,
+    getService, createService, changeFrequency, setFrequency, updateObservation, addSong, removeSong,
     addParticipant, removeParticipant, deleteService, searchSongs, searchCollectionSongs, addGroup,
     createSong, searchMembers, createMember
   }

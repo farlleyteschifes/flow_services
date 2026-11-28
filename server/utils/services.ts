@@ -70,6 +70,18 @@ export function validateWorshipGroup(value: unknown): WorshipGroup {
   return value as WorshipGroup
 }
 
+export function validateObservation(value: unknown) {
+  if (value === undefined || value === null) return ''
+
+  if (typeof value !== 'string' || value.length > 5000) {
+    throw badRequest('A observação deve ser um texto de até 5000 caracteres.', {
+      observation: ['Informe uma observação com até 5000 caracteres.']
+    })
+  }
+
+  return value.trim()
+}
+
 export function emptyFrequency(): Frequency {
   return {
     adults: 0,
@@ -92,6 +104,7 @@ export function serializeService(service: ServiceDocument) {
     id: service._id?.toHexString(),
     date: service.dateKey,
     type: service.type,
+    observation: service.observation ?? '',
     frequency: service.frequency,
     songs: service.songs.map((song) => song.kind === 'group'
       ? {

@@ -77,6 +77,7 @@ export type ServiceDocument = {
   churchId: ObjectId
   dateKey: string
   type: ServiceType
+  observation?: string
   frequency: Frequency
   songs: SongSnapshot[]
   participants: {

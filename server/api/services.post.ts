@@ -28,6 +28,7 @@ export default defineEventHandler(async (event) => {
     const service = {
       _id: new ObjectId(),
       ...filter,
+      observation: '',
       frequency: emptyFrequency(),
       songs: [],
       participants: emptyParticipants(),
